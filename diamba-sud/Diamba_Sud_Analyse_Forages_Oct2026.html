@@ -55,7 +55,9 @@ svg text{fill:var(--mut);font-size:11px}
 ul{margin:6px 0;padding-left:20px}li{margin:3px 0}
 .mc{display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));gap:14px}
 .mcbox{border:1px solid var(--line);border-radius:8px;padding:12px}
-.mcbox table td,.mcbox table th{text-align:right}
+.mcbox table td,.mcbox table th{text-align:right;padding:4px 3px}
+.mcbox input[type=number]{width:62px}
+.mcbox table td:first-child{white-space:normal}
 .mcbox table td:first-child,.mcbox table th:first-child{text-align:left}
 .legend{display:flex;flex-wrap:wrap;gap:12px;font-size:12px;color:var(--mut);margin-top:6px}
 .legend i{display:inline-block;width:12px;height:12px;border-radius:2px;margin-right:4px;vertical-align:-2px}
@@ -71,7 +73,7 @@ footer{text-align:center;color:var(--mut);font-size:12px;padding:10px 16px 30px}
 <nav>
   <a href="#s1">1. Synthèse</a><a href="#s2">2. Base intercepts</a><a href="#s3">3. Teneur × épaisseur</a>
   <a href="#s4">4. Profils de forage</a><a href="#s5">5. Pépite & top-cut</a><a href="#s6">6. SA vs Kassasoko</a>
-  <a href="#s7">7. Bambadji</a><a href="#s8">8. Modèle cible</a><a href="#s9">9. Screening fosse</a>
+  <a href="#s7">7. Bambadji</a><a href="#s8">8. Modèle cible</a><a href="#s9">9. Screening fosse</a><a href="#s9b">9 bis. Prix or</a>
   <a href="#s10">10. Interprétation</a><a href="#s11">11. QA/QC communiqué</a><a href="#s12">12. Recommandations</a>
 </nav>
 <main>
@@ -178,10 +180,13 @@ footer{text-align:center;color:var(--mut);font-size:12px;padding:10px 16px 30px}
 <section id="s8">
   <h2>8. Modèle — cible d'exploration conceptuelle (Monte-Carlo)</h2>
   <div class="note alert"><b>Avertissement réglementaire.</b> Ceci n'est <u>ni une ressource ni une réserve</u> au sens NI 43-101 / JORC / CRIRSCO. C'est un ordre de grandeur de type « cible d'exploration » (JORC 2012 cl. 17), construit sur des hypothèses géométriques. La quantité et la teneur sont conceptuelles ; les forages ne suffisent pas à définir une ressource.</div>
-  <p class="mut">Tonnage = longueur en direction × largeur réelle × extension verticale × densité × facteur de continuité. Lois triangulaires (min / mode / max), 20 000 tirages. Teneurs de départ = teneurs pondérées écrêtées des enveloppes, réduites pour le biais de sélection.</p>
+  <p class="mut">Trois blocs : extensions Southern Arc et Kassasoko (étayées par les intercepts du communiqué) et Kabewest sur Bambadji (optionnel, pondéré par une probabilité de succès faute d'analyses). Tonnage = longueur en direction × largeur réelle × extension verticale × densité × facteur de continuité. Lois triangulaires (min / mode / max), 20 000 tirages. Teneurs de départ = teneurs pondérées écrêtées des enveloppes, réduites pour le biais de sélection.</p>
   <div class="mc" id="mcin"></div>
   <div class="ctrl"><label>Tirages<input type="number" id="nsim" value="20000" step="5000" min="2000"></label><button id="run">Relancer la simulation</button></div>
   <div class="mc" id="mcout"></div>
+  <h3>Tornado — quels paramètres pilotent le P50 ?</h3>
+  <div class="tw" id="tornado"></div>
+  <div class="note">Lecture : la barre la plus longue désigne l'incertitude qui mérite les mètres de forage. Si l'extension en direction ou la continuité dominent, c'est du forage à maille large en périphérie ; si la teneur domine, c'est du remplissage serré et du contrôle QA/QC (DD jumeaux, top-cut).</div>
   <h3>Économie indicative de la cible (P50)</h3>
   <div class="ctrl" id="ecoin"></div>
   <div class="tw"><table id="eco"></table></div>
@@ -191,8 +196,16 @@ footer{text-align:center;color:var(--mut);font-size:12px;padding:10px 16px 30px}
   <h2>9. Screening fosse : teneur de coupure, ratio de découverture limite et intercepts</h2>
   <div class="ctrl" id="pitin"></div>
   <div class="kpis" id="pitk"></div>
-  <p class="mut">Pour chaque enveloppe : section 2D d'une fosse « isolée » partant de la surface (pire cas, sans fosse existante) — fond = largeur réelle, hauteur minéralisée H, pente globale α. SR section = (aire fosse − aire minerai) / aire minerai, comparé au SR limite à la teneur écrêtée diluée. Un intercept repris dans un pushback de la fosse FS aura un SR incrémental bien plus faible : ce test classe, il ne dimensionne pas.</p>
+  <p class="mut">Pour chaque enveloppe : section 2D d'une fosse « isolée » partant de la surface (pire cas, sans fosse existante) — fond = largeur réelle, hauteur minéralisée H, pente globale α. SR section = (aire fosse − aire minerai) / aire minerai, comparé au SR limite à la teneur écrêtée diluée. Un intercept repris dans un pushback de la fosse FS aura un SR incrémental bien plus faible : ce test classe, il ne dimensionne pas. Valeur nette par mètre de direction = tonnes de minerai × (valeur récupérable − traitement − G&A) − tonnes totales × coût mine (densité 2,7).</p>
   <div class="tw"><table id="pit"></table></div>
+</section>
+
+<section id="s9b">
+  <h2>9 bis. Sensibilité au prix de l'or</h2>
+  <p class="mut">Même screening que §9, recalculé de 2 000 à 4 500 $/oz (autres paramètres = ceux saisis en §9). Ligne en gras = prix courant. « Σ valeur nette » = somme des valeurs positives par mètre de direction des sections 2D : indicateur de classement, pas une VAN.</p>
+  <div id="pricechart"></div>
+  <div class="tw" style="margin-top:10px"><table id="price"></table></div>
+  <div class="note">Lecture planification : la coupure marginale reste sous 0,5 g/t même à 2 000 $/oz (0,47 g/t ; break-even 0,54 g/t), donc les enveloppes superficielles (DSDD799, DSR1132, DSR1122-E1) restent en fosse à tous les prix testés. Entre 3 500 et 2 000 $/oz, ce sont les intercepts profonds qui basculent : DSR1149-E2 et DSR1169-E1 passent de « fosse » à « marginal », DSR1119-E3 sort, et DSDD715-E2, DSDD792-E1/E2 et DSR1171-E2 passent de « marginal » à « hors fosse ». Le métal profond de Southern Arc (DSR1149, DSDD792) doit donc rester dans un pushback optionnel, à ne justifier qu'au prix de réserve retenu, pas au spot.</div>
 </section>
 
 <section id="s10">
@@ -215,7 +228,7 @@ footer{text-align:center;color:var(--mut);font-size:12px;padding:10px 16px 30px}
     <li><b>Contrôle des teneurs</b> : RC GC à maille serrée, échantillonnage 1 m (ou 2,5 m par gradin), duplicatas systématiques ; prévoir un écart modèle long terme / GC significatif sur les zones à pics.</li>
     <li><b>Réconciliation</b> : suivre F1 (GC/modèle LT) séparément par domaine « diffus » vs « filonien » ; le risque est un F1 tonnage &gt; 1 et teneur &lt; 1 sur les zones écrêtées.</li>
     <li><b>Séquençage</b> : prioriser les extensions superficielles (DSDD799, DSR1132, DSR1122-E1) dans les premières phases ; les extensions profondes (DSR1149, DSDD792) vont en pushback tardif, après revue d'optimisation Whittle/pseudoflow avec la nouvelle ressource.</li>
-    <li><b>Prix de l'or</b> : à 3 500 $/oz la coupure marginale tombe sous 0,4 g/t et le SR limite à 1,75 g/t dépasse 30:1 — la coque va s'approfondir mécaniquement. Je ferais tourner le plan à 2 500 et 3 000 $/oz pour tester la robustesse de la réserve.</li>
+    <li><b>Prix de l'or</b> (voir §9 bis) : à 3 500 $/oz la coupure marginale tombe sous 0,4 g/t et le SR limite à 1,75 g/t dépasse 30:1 — la coque va s'approfondir mécaniquement. Je ferais tourner le plan à 2 500 et 3 000 $/oz pour tester la robustesse de la réserve.</li>
   </ul>
 </section>
 
@@ -306,7 +319,7 @@ D.forEach(r=>{r.gm=r.au*r.tw;r.dh=r.tw/TWDH;r.to=r.from+r.dh;});
 const $=id=>document.getElementById(id);
 const f=(x,d=1)=>Number.isFinite(x)?x.toLocaleString("fr-FR",{minimumFractionDigits:d,maximumFractionDigits:d}):"–";
 const css=v=>getComputedStyle(document.documentElement).getPropertyValue(v).trim();
-const depCol=d=>d==="Southern Arc"?css("--sa"):css("--ksk");
+const depCol=d=>d==="Southern Arc"?css("--sa"):d==="Kassasoko"?css("--ksk"):css("--ok");
 const gradeCol=g=>g<1.5?css("--g1"):g<2.5?css("--g2"):g<4?css("--g3"):g<6?css("--g4"):css("--g5");
 
 function envelopes(cap,dip){
@@ -430,28 +443,65 @@ function renderCmp(E){
 // ---------- 8. Monte-Carlo ----------
 const MCP={
   "Southern Arc":{strike:[200,400,700],tw:[8,15,25],vert:[60,100,150],grade:[1.4,1.9,2.6],dens:[2.6,2.7,2.8],cont:[0.5,0.65,0.8]},
-  "Kassasoko":{strike:[150,300,500],tw:[4,8,14],vert:[50,80,120],grade:[1.6,2.3,3.2],dens:[2.6,2.7,2.8],cont:[0.4,0.55,0.7]}};
+  "Kassasoko":{strike:[150,300,500],tw:[4,8,14],vert:[50,80,120],grade:[1.6,2.3,3.2],dens:[2.6,2.7,2.8],cont:[0.4,0.55,0.7]},
+  "Kabewest":{strike:[300,600,1000],tw:[5,12,25],vert:[50,100,150],grade:[1.0,1.5,2.2],dens:[2.5,2.65,2.8],cont:[0.3,0.5,0.7]}};
+const KBW={on:true,pg:0.5};
+const DEPS_DS=["Southern Arc","Kassasoko"];
 const LBL={strike:"Extension en direction (m)",tw:"Largeur réelle (m)",vert:"Extension verticale (m)",grade:"Teneur (g/t)",dens:"Densité (t/m³)",cont:"Facteur de continuité"};
 function buildMcInputs(){
-  $("mcin").innerHTML=Object.entries(MCP).map(([d,p])=>`<div class="mcbox"><h3 style="margin-top:0;color:${depCol(d)}">${d} — hypothèses (min / mode / max)</h3><table><tbody>`+
-    Object.keys(LBL).map(k=>`<tr><td>${LBL[k]}</td>`+[0,1,2].map(j=>`<td><input type="number" step="any" data-d="${d}" data-k="${k}" data-j="${j}" value="${p[k][j]}"></td>`).join("")+"</tr>").join("")+"</tbody></table></div>").join("");
-  $("mcin").querySelectorAll("input").forEach(i=>i.onchange=()=>{MCP[i.dataset.d][i.dataset.k][+i.dataset.j]=+i.value;runMC();});
+  $("mcin").innerHTML=Object.entries(MCP).map(([d,p])=>`<div class="mcbox"><h3 style="margin-top:0;color:${depCol(d)}">${d}${d==="Kabewest"?" (Bambadji, sans analyses)":""} — hypothèses (min / mode / max)</h3><table><tbody>`+
+    Object.keys(LBL).map(k=>`<tr><td>${LBL[k]}</td>`+[0,1,2].map(j=>`<td><input type="number" step="any" data-d="${d}" data-k="${k}" data-j="${j}" value="${p[k][j]}"></td>`).join("")+"</tr>").join("")+"</tbody></table>"+
+    (d==="Kabewest"?`<div class="ctrl" style="margin:8px 0 0"><label>Probabilité de succès géologique Pg<input type="number" id="kpg" step="0.05" min="0" max="1" value="${KBW.pg}"></label><label style="flex-direction:row;align-items:center;gap:6px"><input type="checkbox" id="kon" ${KBW.on?"checked":""}>Inclure dans le total district</label></div><p class="mut" style="margin:6px 0 0">Aucun résultat d'analyse publié : chaque tirage « réussit » avec la probabilité Pg, sinon 0 oz. Hypothèses calées sur le style Diamba Sud et la proximité de l'usine.</p>`:"")+"</div>").join("");
+  $("mcin").querySelectorAll("input[data-d]").forEach(i=>i.onchange=()=>{MCP[i.dataset.d][i.dataset.k][+i.dataset.j]=+i.value;runMC();});
+  $("kpg").onchange=e=>{KBW.pg=Math.min(1,Math.max(0,+e.target.value));runMC();};
+  $("kon").onchange=e=>{KBW.on=e.target.checked;runMC();};
 }
 function rng(seed){return()=>{seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
 function tri(u,[a,c,b]){if(b<=a)return a;const F=(c-a)/(b-a);return u<F?a+Math.sqrt(u*(b-a)*(c-a)):b-Math.sqrt((1-u)*(b-a)*(b-c));}
 const pct=(s,p)=>s[Math.min(s.length-1,Math.floor(p*s.length))];
+const KEYS=["strike","tw","vert","dens","cont","grade"];
+// fix = {dep, key, val} : paramètre figé (tornado). Même flux aléatoire quel que soit fix.
+function simulate(n,fix){
+  const r=rng(20261013),per={},ds=new Float64Array(n),dk=new Float64Array(n);
+  Object.keys(MCP).forEach(d=>per[d]={t:new Float64Array(n),o:new Float64Array(n)});
+  for(let i=0;i<n;i++){for(const d in MCP){const p=MCP[d],v={};
+      KEYS.forEach(k=>{const u=r();v[k]=(fix&&fix.dep===d&&fix.key===k)?fix.val:tri(u,p[k]);});
+      let ok=1;if(d==="Kabewest"){ok=r()<KBW.pg?1:0;}
+      const T=v.strike*v.tw*v.vert*v.dens*v.cont*ok,o=T*v.grade/OZ;per[d].t[i]=T;per[d].o[i]=o;
+      if(DEPS_DS.includes(d))ds[i]+=o;dk[i]+=o;}}
+  const srt=a=>Array.from(a).sort((x,y)=>x-y);
+  const res={per:{},ds:srt(ds),dk:srt(dk)};for(const d in per)res.per[d]={t:srt(per[d].t),o:srt(per[d].o)};return res;
+}
 let MCRES={};
+function mcCard(d,ts,os){const P=[0.9,0.5,0.1].map(q=>[pct(ts,1-q),pct(os,1-q)]);
+  return `<div class="mcbox"><h3 style="margin-top:0;color:${depCol(d)}">${d} — résultat</h3><table><thead><tr><th>Percentile</th><th>Mt</th><th>g/t</th><th>koz</th></tr></thead><tbody>`+
+    ["P90 (prudent)","P50","P10 (optimiste)"].map((l,i)=>`<tr><td>${l}</td><td>${f(P[i][0]/1e6,2)}</td><td>${P[i][0]>0?f(P[i][1]*OZ/P[i][0],2):"–"}</td><td><b>${f(P[i][1]/1e3,0)}</b></td></tr>`).join("")+`</tbody></table>${hist(os,depCol(d))}</div>`;}
+function totCard(title,s,col){return `<div class="mcbox"><h3 style="margin-top:0">${title}</h3><table><tbody><tr><td>P90</td><td><b>${f(pct(s,0.1)/1e3,0)} koz</b></td></tr><tr><td>P50</td><td><b>${f(pct(s,0.5)/1e3,0)} koz</b></td></tr><tr><td>P10</td><td><b>${f(pct(s,0.9)/1e3,0)} koz</b></td></tr><tr><td>P50 en % de la réserve FS (1,15 Moz)</td><td><b>${f(pct(s,0.5)/1.15e6*100,0)} %</b></td></tr></tbody></table>${hist(s,col)}</div>`;}
 function runMC(){
-  const n=Math.max(1000,+$("nsim").value||20000),r=rng(20261013);let tot=[];MCRES={};
-  const out=Object.entries(MCP).map(([d,p])=>{const t=[],o=[];
-    for(let i=0;i<n;i++){const T=tri(r(),p.strike)*tri(r(),p.tw)*tri(r(),p.vert)*tri(r(),p.dens)*tri(r(),p.cont),g=tri(r(),p.grade);t.push(T);o.push(T*g/OZ);tot[i]=(tot[i]||0)+T*g/OZ;}
-    const ts=[...t].sort((a,b)=>a-b),os=[...o].sort((a,b)=>a-b);MCRES[d]={t:ts,o:os};return [d,ts,os];});
-  const totS=tot.sort((a,b)=>a-b);MCRES.total=totS;
-  $("mcout").innerHTML=out.map(([d,ts,os])=>{const P=[0.9,0.5,0.1].map(q=>[pct(ts,1-q),pct(os,1-q)]);
-    return `<div class="mcbox"><h3 style="margin-top:0;color:${depCol(d)}">${d} — résultat</h3><table><thead><tr><th>Percentile</th><th>Mt</th><th>g/t</th><th>koz</th></tr></thead><tbody>`+
-      ["P90 (prudent)","P50","P10 (optimiste)"].map((l,i)=>`<tr><td>${l}</td><td>${f(P[i][0]/1e6,2)}</td><td>${f(P[i][1]*OZ/P[i][0],2)}</td><td><b>${f(P[i][1]/1e3,0)}</b></td></tr>`).join("")+`</tbody></table>${hist(os,depCol(d))}</div>`;}).join("")+
-    `<div class="mcbox"><h3 style="margin-top:0">Total SA + Kassasoko</h3><table><tbody><tr><td>P90</td><td><b>${f(pct(totS,0.1)/1e3,0)} koz</b></td></tr><tr><td>P50</td><td><b>${f(pct(totS,0.5)/1e3,0)} koz</b></td></tr><tr><td>P10</td><td><b>${f(pct(totS,0.9)/1e3,0)} koz</b></td></tr><tr><td>P50 en % de la réserve FS</td><td><b>${f(pct(totS,0.5)/1.15e6*100,0)} %</b></td></tr></tbody></table>${hist(totS,css("--gold"))}<p class="mut" style="margin:4px 0 0">g/t affiché = rapport oz/t du percentile (indicatif). Somme des P50 ≠ P50 de la somme.</p></div>`;
-  renderEco();
+  const n=Math.max(1000,+$("nsim").value||20000),R=simulate(n);
+  MCRES={per:R.per,total:R.ds,district:R.dk};
+  let h=Object.keys(MCP).filter(d=>d!=="Kabewest"||KBW.on).map(d=>mcCard(d,R.per[d].t,R.per[d].o)).join("");
+  h+=totCard("Total Diamba Sud (SA + Kassasoko)",R.ds,css("--gold"));
+  if(KBW.on)h+=totCard(`Total district avec Kabewest (Pg ${f(KBW.pg,2)})`,R.dk,css("--ok"));
+  $("mcout").innerHTML=h+`<p class="mut" style="grid-column:1/-1;margin:0">g/t affiché = rapport oz/t du percentile (indicatif). La somme des P50 n'est pas le P50 de la somme.</p>`;
+  renderTornado();renderEco();
+}
+function renderTornado(){
+  const n=4000,inc=KBW.on,base=pct(inc?simulate(n).dk:simulate(n).ds,0.5),items=[];
+  Object.keys(MCP).filter(d=>d!=="Kabewest"||inc).forEach(d=>KEYS.forEach(k=>{
+    const lo=simulate(n,{dep:d,key:k,val:MCP[d][k][0]}),hi=simulate(n,{dep:d,key:k,val:MCP[d][k][2]});
+    const a=pct(inc?lo.dk:lo.ds,0.5),b=pct(inc?hi.dk:hi.ds,0.5);items.push({d,k,a,b,sw:Math.abs(b-a)});}));
+  items.sort((x,y)=>y.sw-x.sw);const top=items.slice(0,10);
+  const mn=Math.min(...top.map(t=>Math.min(t.a,t.b))),mx=Math.max(...top.map(t=>Math.max(t.a,t.b)));
+  const W=640,rh=22,L=230,R=50,T=8,H=T+top.length*rh+30,X=v=>L+(v-mn)/(mx-mn||1)*(W-L-R);let b="";
+  top.forEach((t,i)=>{const y=T+i*rh,x1=X(Math.min(t.a,t.b)),x2=X(Math.max(t.a,t.b)),xb=X(base);
+    b+=`<text x="${L-8}" y="${y+14}" text-anchor="end" style="fill:${depCol(t.d)}">${t.d} · ${LBL[t.k]}</text>`;
+    b+=`<rect x="${Math.min(X(t.a),xb)}" y="${y+3}" width="${Math.abs(X(t.a)-xb)}" height="${rh-8}" fill="${css("--bad")}" fill-opacity=".7"><title>min : ${f(t.a/1e3,0)} koz</title></rect>`;
+    b+=`<rect x="${Math.min(X(t.b),xb)}" y="${y+3}" width="${Math.abs(X(t.b)-xb)}" height="${rh-8}" fill="${css("--ok")}" fill-opacity=".7"><title>max : ${f(t.b/1e3,0)} koz</title></rect>`;
+    b+=`<text x="${x2+4}" y="${y+14}">±${f(t.sw/2e3,0)} koz</text>`;});
+  b+=`<line x1="${X(base)}" x2="${X(base)}" y1="${T}" y2="${H-26}" stroke="${css("--ink")}"/><text x="${X(base)}" y="${H-12}" text-anchor="middle" style="fill:${css("--ink")}">P50 de base ${f(base/1e3,0)} koz</text>`;
+  b+=`<text x="${L}" y="${H-2}">${f(mn/1e3,0)} koz</text><text x="${W-R}" y="${H-2}" text-anchor="end">${f(mx/1e3,0)} koz</text>`;
+  $("tornado").innerHTML=`<div style="max-width:${W}px">${svg(W,H,b)}</div>`+`<div class="legend"><span><i style="background:var(--bad)"></i>paramètre figé au min</span><span><i style="background:var(--ok)"></i>paramètre figé au max</span><span>4 000 tirages par barre — ${inc?"total district avec Kabewest":"total SA + Kassasoko"}</span></div>`;
 }
 function hist(s,col){const nb=30,mn=s[0],mx=pct(s,0.995),w=(mx-mn)/nb||1,c=new Array(nb).fill(0);s.forEach(v=>{const k=Math.min(nb-1,Math.floor((v-mn)/w));if(v<=mx)c[k]++;});
   const W=320,H=110,L=4,B=16,cm=Math.max(...c);let b="";c.forEach((v,i)=>b+=`<rect x="${L+i*(W-8)/nb}" y="${H-B-v/cm*(H-B-6)}" width="${(W-8)/nb-1}" height="${v/cm*(H-B-6)}" fill="${col}" fill-opacity=".7"/>`);
@@ -477,20 +527,49 @@ function renderEco(){
     ["Coût de forage SA+KSK (45 379 m)",`${f(cost/1e6,1)} M$`],
     ["Coût de découverte P50",`${f(cost/o50,1)} $/oz`],
     ["Coût de découverte P90",`${f(cost/o90,1)} $/oz`]];
+  if(KBW.on&&MCRES.per.Kabewest){const ok=MCRES.per.Kabewest.o,mean=ok.reduce((a,v)=>a+v,0)/ok.length;
+    rows.push(["Kabewest — espérance d'onces (Pg incluse)",`${f(mean/1e3,0)} koz`],
+      ["Kabewest — coût de découverte espéré (8 M$ / espérance)",`${f(8e6/mean,1)} $/oz`],
+      ["Total district P50 (SA + KSK + Kabewest)",`${f(pct(MCRES.district,0.5)/1e3,0)} koz — ${f(pct(MCRES.district,0.5)/1.15e6*100,0)} % de la réserve FS`]);}
   $("eco").innerHTML="<tbody>"+rows.map(r=>`<tr><td style="text-align:left">${r[0]}</td><td><b>${r[1]}</b></td></tr>`).join("")+"</tbody>";
 }
 
 // ---------- 9. Screening fosse ----------
+const DENS=2.7;
+function pitRows(E){
+  const cMarg=ECO.cp+ECO.cga,dil=ECO.dil/100,ta=Math.tan(ECO.slope*Math.PI/180),srBE=g=>(valT(g)-cMarg-ECO.cm)/ECO.cm;
+  return E.map(e=>{const g=e.gCap*(1-dil),H=Math.max(ECO.H,1),Zb=e.zMid+H/2,A=e.tw*Zb+Zb*Zb/ta,Ao=e.tw*H*(1+dil),sr=(A-Ao)/Ao,be=srBE(g),r=be>0?sr/be:Infinity;
+    const val=(Ao*DENS*(valT(g)-cMarg)-A*DENS*ECO.cm)/1e3; // k$ par mètre de direction
+    return {...e,g,sr,be,r,val,st:r<0.6?["Fosse","ok"]:r<1?["Marginal","warn"]:["Hors fosse isolée","bad"]};});
+}
+function cutoffs(){const cMarg=ECO.cp+ECO.cga,u=ECO.rec/100*netOz()/OZ;return {coM:cMarg/u,coB:(cMarg+ECO.cm)/u,sr175:(valT(1.75)-cMarg-ECO.cm)/ECO.cm};}
 function renderPit(){
-  const cap=+$("cap").value,dip=+$("dip").value,E=envelopes(cap,dip),cMarg=ECO.cp+ECO.cga,dil=ECO.dil/100,ta=Math.tan(ECO.slope*Math.PI/180);
-  const coM=cMarg/(ECO.rec/100*netOz()/OZ),coB=(cMarg+ECO.cm)/(ECO.rec/100*netOz()/OZ);
-  const srBE=g=>(valT(g)-cMarg-ECO.cm)/ECO.cm;
-  $("pitk").innerHTML=[[f(coM,2)+" g/t","coupure marginale (sans minage)"],[f(coB,2)+" g/t","coupure break-even (avec minage)"],[f(srBE(1.75),1)+" : 1","SR limite à 1,75 g/t (teneur réserve)"],[f(valT(1.75),0)+" $/t","valeur nette récupérable à 1,75 g/t"]]
+  const E=envelopes(+$("cap").value,+$("dip").value),c=cutoffs();
+  $("pitk").innerHTML=[[f(c.coM,2)+" g/t","coupure marginale (sans minage)"],[f(c.coB,2)+" g/t","coupure break-even (avec minage)"],[f(c.sr175,1)+" : 1","SR limite à 1,75 g/t (teneur réserve)"],[f(valT(1.75),0)+" $/t","valeur nette récupérable à 1,75 g/t"]]
     .map(x=>`<div class="kpi"><b>${x[0]}</b><span>${x[1]}</span></div>`).join("");
-  const rows=E.map(e=>{const g=e.gCap*(1-dil),H=Math.max(ECO.H,1),Zb=e.zMid+H/2,Wd=e.tw,A=Wd*Zb+Zb*Zb/ta,Ao=Wd*H*(1+dil),sr=(A-Ao)/Ao,be=srBE(g),r=sr/be;
-    return {...e,g,sr,be,r,st:r<0.6?["Fosse","ok"]:r<1?["Marginal","warn"]:["Hors fosse isolée","bad"]};}).sort((a,b)=>a.r-b.r);
-  const hd=["Gis.","Intervalle","Z milieu (m)","TW (m)","Écrêtée diluée g/t","SR section","SR limite","Ratio","Statut"];
-  $("pit").innerHTML="<thead><tr>"+hd.map(h=>`<th>${h}</th>`).join("")+"</tr></thead><tbody>"+rows.map(r=>`<tr><td><span class="tag ${r.dep==="Southern Arc"?"tSA":"tKSK"}">${r.dep==="Southern Arc"?"SA":"KSK"}</span></td><td>${r.id}</td><td>${f(r.zMid,0)}</td><td>${f(r.tw)}</td><td>${f(r.g,2)}</td><td>${f(r.sr,1)}</td><td>${f(r.be,1)}</td><td>${f(r.r,2)}</td><td><span class="pill ${r.st[1]}">${r.st[0]}</span></td></tr>`).join("")+"</tbody>";
+  const rows=pitRows(E).sort((a,b)=>a.r-b.r);
+  const hd=["Gis.","Intervalle","Z milieu (m)","TW (m)","Écrêtée diluée g/t","SR section","SR limite","Ratio","Valeur nette k$/m dir.","Statut"];
+  $("pit").innerHTML="<thead><tr>"+hd.map(h=>`<th>${h}</th>`).join("")+"</tr></thead><tbody>"+rows.map(r=>`<tr><td><span class="tag ${r.dep==="Southern Arc"?"tSA":"tKSK"}">${r.dep==="Southern Arc"?"SA":"KSK"}</span></td><td>${r.id}</td><td>${f(r.zMid,0)}</td><td>${f(r.tw)}</td><td>${f(r.g,2)}</td><td>${f(r.sr,1)}</td><td>${f(r.be,1)}</td><td>${f(r.r,2)}</td><td class="${r.val>0?"ok":"bad"}">${f(r.val,0)}</td><td><span class="pill ${r.st[1]}">${r.st[0]}</span></td></tr>`).join("")+"</tbody>";
+  renderPrice(E);
+}
+function renderPrice(E){
+  const keep=ECO.price,prices=[];for(let p=2000;p<=4500;p+=250)prices.push(p);
+  const res=prices.map(p=>{ECO.price=p;const c=cutoffs(),R=pitRows(E);
+    return {p,...c,nF:R.filter(r=>r.st[0]==="Fosse").length,nM:R.filter(r=>r.st[0]==="Marginal").length,v:R.reduce((s,r)=>s+Math.max(0,r.val),0),gm:R.filter(r=>r.r<1).reduce((s,r)=>s+r.gmCap,0)};});
+  ECO.price=keep;
+  const vmax=Math.max(...res.map(r=>r.v)),gmT=E.reduce((s,r)=>s+r.gmCap,0);
+  $("price").innerHTML="<thead><tr>"+["Prix $/oz","Coupure marg. g/t","Coupure BE g/t","SR limite @1,75","Env. en fosse","Marginales","g·m captés (écrêtés)","Σ valeur nette k$/m dir."].map(h=>`<th>${h}</th>`).join("")+"</tr></thead><tbody>"+
+    res.map(r=>`<tr${r.p===keep?' style="font-weight:700"':""}><td>${f(r.p,0)}</td><td>${f(r.coM,2)}</td><td>${f(r.coB,2)}</td><td>${f(r.sr175,1)}</td><td>${r.nF} / ${E.length}</td><td>${r.nM}</td><td>${f(r.gm,0)} (${f(r.gm/gmT*100,0)} %)</td><td><span style="display:inline-block;height:9px;width:${Math.max(0,r.v/vmax*120)}px;background:var(--gold);margin-right:6px;border-radius:2px"></span>${f(r.v,0)}</td></tr>`).join("")+"</tbody>";
+  // graphique : coupure et nb d'enveloppes en fosse
+  const W=620,H=240,L=44,Rr=44,T=14,B=34,X=p=>L+(p-2000)/2500*(W-L-Rr),cmax=Math.max(...res.map(r=>r.coB))*1.1,Y1=v=>T+(1-v/cmax)*(H-T-B),Y2=v=>T+(1-v/E.length)*(H-T-B);
+  let b=axis(L,H-B,W-Rr,H-B)+axis(L,T,L,H-B)+axis(W-Rr,T,W-Rr,H-B);
+  res.forEach(r=>{const w=(W-L-Rr)/res.length*0.6;b+=`<rect x="${X(r.p)-w/2}" y="${Y2(r.nF)}" width="${w}" height="${H-B-Y2(r.nF)}" fill="${css("--ok")}" fill-opacity=".35"/><rect x="${X(r.p)-w/2}" y="${Y2(r.nF+r.nM)}" width="${w}" height="${Y2(r.nF)-Y2(r.nF+r.nM)}" fill="${css("--warn")}" fill-opacity=".45"/><text x="${X(r.p)}" y="${H-B+14}" text-anchor="middle">${r.p}</text>`;});
+  b+=`<path d="${res.map((r,i)=>(i?"L":"M")+X(r.p)+","+Y1(r.coB)).join("")}" fill="none" stroke="${css("--bad")}" stroke-width="2"/>`;
+  b+=`<path d="${res.map((r,i)=>(i?"L":"M")+X(r.p)+","+Y1(r.coM)).join("")}" fill="none" stroke="${css("--bad")}" stroke-width="1.5" stroke-dasharray="4 3"/>`;
+  [0,0.2,0.4,0.6].filter(v=>v<=cmax).forEach(v=>b+=`<text x="${L-5}" y="${Y1(v)+4}" text-anchor="end">${f(v,1)}</text>`);
+  [0,5,10,15,20].forEach(v=>b+=`<text x="${W-Rr+5}" y="${Y2(v)+4}">${v}</text>`);
+  b+=`<text transform="translate(12 ${(T+H-B)/2}) rotate(-90)" text-anchor="middle" style="fill:${css("--bad")}">coupure g/t</text><text transform="translate(${W-6} ${(T+H-B)/2}) rotate(90)" text-anchor="middle">nb enveloppes</text><text x="${(L+W-Rr)/2}" y="${H-4}" text-anchor="middle">Prix de l'or ($/oz)</text>`;
+  $("pricechart").innerHTML=`<div style="max-width:${W+80}px">${svg(W,H,b)}</div>`+`<div class="legend"><span><i style="background:var(--ok);opacity:.5"></i>enveloppes « fosse »</span><span><i style="background:var(--warn);opacity:.6"></i>marginales</span><span><i style="background:var(--bad)"></i>coupure break-even (trait plein) / marginale (pointillé)</span></div>`;
 }
 
 // ---------- Export ----------
