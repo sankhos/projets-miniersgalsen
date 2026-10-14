@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Diamba Sud — Fosse 3D</title>
+<style>
+:root{--bg:#f4f5f7;--card:#fff;--ink:#17202b;--mut:#5b6877;--line:#dde2e8;--acc:#b7791f;--sky:#e0f2fe;--cv:#eef2f6}
+@media (prefers-color-scheme:dark){:root{--bg:#0f141a;--card:#171e27;--ink:#e6ebf1;--mut:#97a3b2;--line:#2a3441;--acc:#f6c453;--sky:#1e3a5f;--cv:#111821}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:13.5px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+header{padding:16px;border-bottom:1px solid var(--line);background:var(--card)}
+header h1{margin:0 0 3px;font-size:20px}header p{margin:0;color:var(--mut)}
+main{max-width:1280px;margin:0 auto;padding:14px 16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px;margin-bottom:14px}
+h2{font-size:16px;margin:0 0 8px}
+.ctrl{display:flex;flex-wrap:wrap;gap:10px;align-items:end}
+.ctrl label{display:flex;flex-direction:column;gap:2px;font-size:11.5px;color:var(--mut)}
+.ctrl fieldset{border:1px solid var(--line);border-radius:8px;padding:6px 10px 10px;display:flex;flex-wrap:wrap;gap:10px;margin:0}
+.ctrl legend{font-size:11.5px;font-weight:700;color:var(--ink);padding:0 4px}
+input[type=number]{width:74px;padding:4px 6px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink)}
+select,button{padding:5px 9px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink);font:inherit}
+button{cursor:pointer;font-weight:600}button.pri{background:var(--acc);color:#111;border-color:var(--acc)}
+.bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:8px 0}
+.bar label{font-size:12px;color:var(--mut);display:flex;align-items:center;gap:5px}
+input[type=range]{width:220px}
+#wrap3d{position:relative;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--cv);touch-action:none}
+#c3d{display:block;width:100%;height:600px;cursor:grab}
+#c3d:active{cursor:grabbing}
+#hud{position:absolute;right:10px;top:10px;background:color-mix(in srgb,var(--card) 88%,transparent);border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:12px;min-width:230px;pointer-events:none}
+#hud b{font-size:13px}
+#busy{position:absolute;inset:0;display:none;align-items:center;justify-content:center;background:color-mix(in srgb,var(--card) 70%,transparent);font-weight:700;font-size:15px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12px;color:var(--mut);margin-top:8px}
+.legend i{display:inline-block;width:13px;height:13px;border-radius:2px;margin-right:4px;vertical-align:-2px;border:1px solid rgba(0,0,0,.2)}
+.legend b{color:var(--ink);margin-right:2px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin:8px 0}
+.kpi{border:1px solid var(--line);border-radius:8px;padding:8px 10px}.kpi b{display:block;font-size:17px}.kpi span{font-size:11.5px;color:var(--mut)}
+.grid2{display:grid;grid-template-columns:1.25fr 1fr;gap:14px}@media(max-width:900px){.grid2{grid-template-columns:1fr}}
+.tw{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:12.5px}
+th,td{padding:5px 7px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}th{color:var(--mut)}
+td:first-child,th:first-child{text-align:left}
+#csec{display:block;width:100%;height:430px;border:1px solid var(--line);border-radius:8px;background:var(--cv)}
+.note{border-left:3px solid var(--acc);background:var(--bg);padding:8px 12px;border-radius:0 6px 6px 0;margin:8px 0;font-size:12.5px}
+svg{display:block;width:100%;height:auto}svg text{fill:var(--mut);font-size:11px}
+a{color:var(--acc)}
+</style>
+</head>
+<body>
+<header>
+  <h1>Diamba Sud — fosse 3D interactive, modèle de blocs et pushbacks</h1>
+  <p>Modèle de blocs conceptuel estimé à partir des intercepts publiés le 13/10/2026 · fosse optimale Lerchs-Grossmann (max-flow) · coques emboîtées par facteur de revenu · pushbacks séquencés banc par banc. <a href="Diamba_Sud_Analyse_Forages_Oct2026.html">← retour au rapport</a></p>
+</header>
+<main>
+
+<div class="card">
+  <h2>Paramètres</h2>
+  <div class="ctrl">
+    <fieldset><legend>Gisement</legend>
+      <label>Gisement<select id="dep"><option>Southern Arc</option><option>Kassasoko</option></select></label>
+      <label>Espacement forages (m)<input type="number" id="spacing" value="60" step="10"></label>
+      <label>Pendage du corps (°)<input type="number" id="dipb" value="60" step="5"></label>
+      <label>Top-cut (g/t)<input type="number" id="cap" value="20" step="1"></label>
+    </fieldset>
+    <fieldset><legend>Estimation IDW anisotrope</legend>
+      <label>Portée direction (m)<input type="number" id="rs" value="80" step="10"></label>
+      <label>Portée pendage (m)<input type="number" id="ru" value="70" step="10"></label>
+      <label>Portée normale (m)<input type="number" id="rn" value="10" step="5"></label>
+    </fieldset>
+    <fieldset><legend>Économie</legend>
+      <label>Prix or ($/oz)<input type="number" id="price" value="3000" step="100"></label>
+      <label>Récupération (%)<input type="number" id="rec" value="92" step="1"></label>
+      <label>Redevance (%)<input type="number" id="roy" value="6" step="0.5"></label>
+      <label>Coût mine ($/t)<input type="number" id="cm" value="3.0" step="0.1"></label>
+      <label>Surcoût / 10 m ($/t)<input type="number" id="cminc" value="0.04" step="0.01"></label>
+      <label>Traitement ($/t)<input type="number" id="cp" value="20" step="1"></label>
+      <label>G&amp;A ($/t)<input type="number" id="cga" value="6" step="1"></label>
+    </fieldset>
+    <fieldset><legend>Phasage</legend>
+      <label>Nb pushbacks<input type="number" id="npb" value="4" min="1" max="6" step="1"></label>
+      <label>Mouvement (Mt/an)<input type="number" id="rate" value="25" step="1"></label>
+    </fieldset>
+    <button class="pri" id="calc">Recalculer modèle + fosse</button>
+  </div>
+</div>
+
+<div class="card">
+  <h2>Vue 3D — fosse et modèle de blocs</h2>
+  <div class="bar">
+    <button id="play">▶ Lecture</button>
+    <button id="reset0">⏮ Avant exploitation</button>
+    <button id="end">⏭ Fosse finale</button>
+    <label>Étape <input type="range" id="step" min="-1" max="0" value="-1"></label>
+    <label>Vitesse <select id="speed"><option value="900">lente</option><option value="450" selected>normale</option><option value="180">rapide</option></select></label>
+    <label>Couleurs <select id="mode"><option value="geo">Lithologie + teneurs</option><option value="pb">Pushbacks</option></select></label>
+    <label><input type="checkbox" id="waste" checked> Stérile visible</label>
+    <label><input type="checkbox" id="holes" checked> Forages</label>
+    <label>Coupe <select id="cutax"><option value="x">plan Y–Z (transversale)</option><option value="y">plan X–Z (longitudinale)</option><option value="n">aucune</option></select></label>
+    <input type="range" id="cut" min="0" max="0" value="0">
+    <button id="view">Vue initiale</button>
+  </div>
+  <div id="wrap3d"><canvas id="c3d"></canvas><div id="hud"></div><div id="busy">Calcul du modèle et de la fosse…</div></div>
+  <div class="legend" id="leg"></div>
+  <p class="mut" style="margin:6px 0 0;color:var(--mut);font-size:12px">Glisser = rotation · molette = zoom · Maj + glisser = déplacement. La coupe (par défaut sur le forage au plus fort gram-mètre) ouvre le modèle pour voir les blocs minéralisés à l'intérieur ; décocher « Stérile visible » pour ne garder que le corps minéralisé.</p>
+</div>
+
+<div class="card">
+  <h2>Avancement</h2>
+  <div class="kpis" id="prog"></div>
+</div>
+
+<div class="grid2">
+  <div class="card">
+    <h2>Coupe transversale (plan Y–Z) avec forages et limites de pushbacks</h2>
+    <div class="bar"><label>Section <select id="secsel"></select></label><input type="range" id="sec" min="0" max="0" value="0"><span class="mut" id="seclbl" style="font-size:12px"></span></div>
+    <canvas id="csec"></canvas>
+    <div class="legend"><span><i style="background:var(--sky)"></i>vide (miné)</span><span><i style="background:#111;height:3px;vertical-align:3px"></i>surface actuelle de la fosse</span><span>traits colorés = limites des pushbacks</span><span>trait fin = forage, segments = intercepts</span></div>
+  </div>
+  <div class="card">
+    <h2>Pit-by-pit (coques emboîtées)</h2>
+    <div id="pbp"></div>
+    <h2 style="margin-top:12px">Pushbacks</h2>
+    <div class="tw"><table id="tpb"></table></div>
+  </div>
+</div>
+
+<div class="card">
+  <h2>Hypothèses et limites</h2>
+  <div class="note"><b>Modèle conceptuel, ni ressource ni réserve.</b> Les coordonnées des collets, azimuts et inclinaisons (Annexe 1) ne sont pas publiés. Les forages sont placés le long de la direction à l'espacement saisi, inclinés à -60° vers -Y. Chaque collet est positionné pour que l'intercept principal tombe sur un plan minéralisé de pendage donné vers +Y : les autres intercepts du même trou forment des lentilles parallèles.</div>
+  <ul>
+    <li><b>Blocs</b> 15 × 15 × 15 m. Composites de 3 m le long du trou : pics inclus écrêtés, teneur résiduelle de l'enveloppe ailleurs, 0,02 g/t hors enveloppe. Estimation par inverse des distances au carré dans un ellipsoïde aligné sur le corps, avec au moins 3 composites.</li>
+    <li><b>Profil d'altération</b> pour le stérile : latérite/cuirasse 0–15 m (d = 2,3), saprolite 15–45 m (d = 1,8), transition 45–60 m (d = 2,3), roche fraîche au-delà (d = 2,75).</li>
+    <li><b>Fosse</b> : fermeture maximale exacte (Lerchs-Grossmann par max-flow/Dinic), précédence 1:9 sur blocs cubiques, soit une pente globale d'environ 40–45°. 12 coques à facteur de revenu 0,20 → 1,00. Pushbacks = regroupement des coques en tranches de tonnage équivalentes.</li>
+    <li><b>Séquence</b> : pushback par pushback, banc par banc, de haut en bas. La cadence convertit le tonnage cumulé en années. Pas de chevauchement de phases ni de lissage du ratio de découverture.</li>
+  </ul>
+</div>
+</main>
+
+<script>
+"use strict";
+// ================= Données =================
+const RAW=`Southern Arc,DSDD699,DD,DSDD699-E1,E,,96,12.0,6.8
+Southern Arc,DSDD699,DD,DSDD699-I1,I,DSDD699-E1,98,2.4,18.9
+Southern Arc,DSDD699,DD,DSDD699-I2,I,DSDD699-E1,103,0.8,22.6
+Southern Arc,DSDD715,DD,DSDD715-E1,E,,92,28.0,2.4
+Southern Arc,DSDD715,DD,DSDD715-I1,I,DSDD715-E1,124,0.8,11.5
+Southern Arc,DSDD715,DD,DSDD715-E2,E,,155,20.8,2.8
+Southern Arc,DSDD715,DD,DSDD715-I2,I,DSDD715-E2,169,0.8,24.6
+Southern Arc,DSDD715,DD,DSDD715-I3,I,DSDD715-E2,180,0.8,12.1
+Southern Arc,DSDD792,DD,DSDD792-E1,E,,154,7.2,5.0
+Southern Arc,DSDD792,DD,DSDD792-I1,I,DSDD792-E1,162,0.8,24.8
+Southern Arc,DSDD792,DD,DSDD792-E2,E,,186,17.6,3.9
+Southern Arc,DSDD792,DD,DSDD792-I2,I,DSDD792-E2,187,0.8,25.2
+Southern Arc,DSDD792,DD,DSDD792-I3,I,DSDD792-E2,195,0.8,11.6
+Southern Arc,DSDD792,DD,DSDD792-I4,I,DSDD792-E2,198,0.8,21.1
+Southern Arc,DSDD792,DD,DSDD792-E3,E,,216,13.6,1.9
+Southern Arc,DSDD792,DD,DSDD792-I5,I,DSDD792-E3,227,0.8,11.8
+Southern Arc,DSDD799,DD,DSDD799-E1,E,,26,56.8,1.8
+Southern Arc,DSDD799,DD,DSDD799-I1,I,DSDD799-E1,85,0.8,24.5
+Southern Arc,DSR1149,RC,DSR1149-E1,E,,187,18.4,1.4
+Southern Arc,DSR1149,RC,DSR1149-E2,E,,228,40.8,3.9
+Southern Arc,DSR1149,RC,DSR1149-I1,I,DSR1149-E2,248,0.8,10.2
+Southern Arc,DSR1149,RC,DSR1149-I2,I,DSR1149-E2,261,1.6,17.3
+Southern Arc,DSR1149,RC,DSR1149-I3,I,DSR1149-E2,272,0.8,17.4
+Southern Arc,DSR1149,RC,DSR1149-I4,I,DSR1149-E2,274,0.8,11.3
+Southern Arc,DSR1128,RC,DSR1128-E1,E,,103,12.8,7.8
+Southern Arc,DSR1128,RC,DSR1128-I1,I,DSR1128-E1,112,0.8,59.5
+Southern Arc,DSR1128,RC,DSR1128-I2,I,DSR1128-E1,114,0.8,29.8
+Southern Arc,DSR1132,RC,DSR1132-E1,E,,65,20.0,4.5
+Southern Arc,DSR1132,RC,DSR1132-I1,I,DSR1132-E1,69,0.8,59.7
+Southern Arc,DSR1132,RC,DSR1132-I2,I,DSR1132-E1,76,0.8,13.9
+Kassasoko,DSR1119,RC,DSR1119-E1,E,,88,5.6,5.0
+Kassasoko,DSR1119,RC,DSR1119-I1,I,DSR1119-E1,88,0.8,19.1
+Kassasoko,DSR1119,RC,DSR1119-E2,E,,131,5.6,2.9
+Kassasoko,DSR1119,RC,DSR1119-E3,E,,146,5.6,8.1
+Kassasoko,DSR1119,RC,DSR1119-I2,I,DSR1119-E3,146,1.6,21.9
+Kassasoko,DSR1122,RC,DSR1122-E1,E,,49,11.2,3.5
+Kassasoko,DSR1122,RC,DSR1122-I1,I,DSR1122-E1,54,0.8,19.8
+Kassasoko,DSR1122,RC,DSR1122-E2,E,,137,1.6,8.8
+Kassasoko,DSR1122,RC,DSR1122-I2,I,DSR1122-E2,137,0.8,17.2
+Kassasoko,DSR1157,RC,DSR1157-E1,E,,75,9.6,2.8
+Kassasoko,DSR1157,RC,DSR1157-E2,E,,95,27.2,3.0
+Kassasoko,DSR1157,RC,DSR1157-I1,I,DSR1157-E2,110,0.8,13.5
+Kassasoko,DSR1157,RC,DSR1157-I2,I,DSR1157-E2,112,0.8,19.3
+Kassasoko,DSR1157,RC,DSR1157-I3,I,DSR1157-E2,116,0.8,28.3
+Kassasoko,DSR1157,RC,DSR1157-E3,E,,178,3.2,3.3
+Kassasoko,DSR1157,RC,DSR1157-I4,I,DSR1157-E3,181,0.8,11.3
+Kassasoko,DSR1169,RC,DSR1169-E1,E,,139,11.2,4.8
+Kassasoko,DSR1169,RC,DSR1169-I1,I,DSR1169-E1,141,0.8,22.3
+Kassasoko,DSR1171,RC,DSR1171-E1,E,,96,16.8,1.0
+Kassasoko,DSR1171,RC,DSR1171-E2,E,,160,24.0,1.9
+Kassasoko,DSR1171,RC,DSR1171-I1,I,DSR1171-E2,182,0.8,22.3`;
+const OZ=31.1035,TWDH=0.8,B=15,HOLE_DIP=60;
+const D=RAW.trim().split("\n").map(l=>{const c=l.split(",");const r={dep:c[0],hole:c[1],id:c[3],lvl:c[4],par:c[5],from:+c[6],tw:+c[7],au:+c[8]};r.dh=r.tw/TWDH;r.to=r.from+r.dh;return r;});
+const ORDER={"Southern Arc":["DSR1132","DSDD699","DSR1128","DSDD799","DSDD715","DSDD792","DSR1149"],"Kassasoko":["DSR1122","DSR1119","DSR1157","DSR1169","DSR1171"]};
+const RF=[0.20,0.25,0.30,0.33,0.36,0.40,0.45,0.50,0.60,0.70,0.85,1.00];
+const $=id=>document.getElementById(id);
+const f=(x,d=1)=>Number.isFinite(x)?x.toLocaleString("fr-FR",{minimumFractionDigits:d,maximumFractionDigits:d}):"–";
+const P=()=>{const o={};["spacing","dipb","cap","rs","ru","rn","price","rec","roy","cm","cminc","cp","cga","npb","rate"].forEach(k=>o[k]=+$(k).value);o.dep=$("dep").value;return o;};
+
+// ================= Couleurs =================
+const LITHO=[{n:"Latérite / cuirasse",z:15,d:2.3,c:[139,58,30]},{n:"Saprolite",z:45,d:1.8,c:[214,185,140]},{n:"Transition (saprock)",z:60,d:2.3,c:[168,159,145]},{n:"Roche fraîche",z:1e9,d:2.75,c:[107,114,128]}];
+const ORE=[{n:"coupure – 1 g/t",g:0,c:[56,189,248]},{n:"1 – 2 g/t",g:1,c:[34,197,94]},{n:"2 – 3 g/t",g:2,c:[250,204,21]},{n:"3 – 5 g/t",g:3,c:[249,115,22]},{n:"5 – 8 g/t",g:5,c:[220,38,38]},{n:"> 8 g/t",g:8,c:[162,28,175]}];
+const PBC=[[37,99,235],[22,163,74],[245,158,11],[219,39,119],[124,58,237],[13,148,136]];
+const lithoOf=depth=>LITHO.findIndex(l=>depth<l.z);
+const oreCol=g=>{let c=ORE[0].c;for(const o of ORE)if(g>=o.g)c=o.c;return c;};
+const rgb=(c,s=1)=>`rgb(${Math.round(c[0]*s)},${Math.round(c[1]*s)},${Math.round(c[2]*s)})`;
+
+// ================= Modèle =================
+let M=null; // modèle courant
+function buildModel(p){
+  const ca=Math.cos(HOLE_DIP*Math.PI/180),sa=Math.sin(HOLE_DIP*Math.PI/180),db=p.dipb*Math.PI/180;
+  // forages
+  const holes=ORDER[p.dep].map((h,idx)=>{
+    const ints=D.filter(r=>r.hole===h),env=ints.filter(r=>r.lvl==="E"),inc=ints.filter(r=>r.lvl==="I");
+    env.forEach(e=>{const I=inc.filter(i=>i.par===e.id),gm=I.reduce((s,i)=>s+i.au*i.tw,0),tw=I.reduce((s,i)=>s+i.tw,0);e.res=(e.au*e.tw-gm)/(e.tw-tw);});
+    const main=env.reduce((a,b)=>a.au*a.tw>b.au*b.tw?a:b),dm=main.from+main.dh/2;
+    const xc=idx*p.spacing,yc=dm*ca+dm*sa/Math.tan(db),eoh=Math.max(...env.map(e=>e.to))+20;
+    const gAt=d=>{const i=inc.find(i=>d>=i.from&&d<i.to);if(i)return Math.min(i.au,p.cap);const e=env.find(e=>d>=e.from&&d<e.to);return e?Math.min(e.res,p.cap):0.02;};
+    const comps=[];for(let d=0;d<eoh;d+=3){let s=0;for(let k=0;k<3;k++)s+=gAt(d+k+0.5);const dmid=d+1.5;comps.push({x:xc,y:yc-dmid*ca,z:-dmid*sa,g:s/3});}
+    return {h,xc,yc,eoh,env,inc,comps,ca,sa};});
+  const S=holes.flatMap(h=>h.comps);
+  const minx=Math.min(...holes.map(h=>h.xc)),maxx=Math.max(...holes.map(h=>h.xc));
+  const ore=S.filter(s=>s.g>0.1),miny=Math.min(...ore.map(s=>s.y)),maxy=Math.max(...ore.map(s=>s.y)),maxd=Math.max(...ore.map(s=>-s.z));
+  const X0=Math.floor((minx-300)/B)*B,Y0=Math.floor((miny-300)/B)*B;
+  const nx=Math.ceil((maxx+300-X0)/B),ny=Math.ceil((maxy+300-Y0)/B),nz=Math.min(24,Math.ceil((maxd+25)/B));
+  const N=nx*ny*nz,gs=new Float64Array(N),ws=new Float64Array(N),cnt=new Uint16Array(N);
+  // IDW anisotrope (dispersion des composites vers les blocs)
+  const cu=Math.cos(db),su=Math.sin(db),ex=p.rs,ey=Math.abs(p.ru*cu)+Math.abs(p.rn*su),ez=Math.abs(p.ru*su)+Math.abs(p.rn*cu);
+  for(const s of S){
+    const i0=Math.max(0,Math.floor((s.x-ex-X0)/B)),i1=Math.min(nx-1,Math.floor((s.x+ex-X0)/B));
+    const j0=Math.max(0,Math.floor((s.y-ey-Y0)/B)),j1=Math.min(ny-1,Math.floor((s.y+ey-Y0)/B));
+    const k0=Math.max(0,Math.floor((-s.z-ez)/B)),k1=Math.min(nz-1,Math.floor((-s.z+ez)/B));
+    for(let k=k0;k<=k1;k++){const vz=-(k+0.5)*B-s.z;
+      for(let j=j0;j<=j1;j++){const vy=Y0+(j+0.5)*B-s.y,du=(vy*cu-vz*su)/p.ru,dn=(vy*su+vz*cu)/p.rn,a=du*du+dn*dn;if(a>=1)continue;
+        for(let i=i0;i<=i1;i++){const vx=(X0+(i+0.5)*B-s.x)/p.rs,h2=a+vx*vx;if(h2>=1)continue;const w=1/(h2+0.02),b=(k*ny+j)*nx+i;gs[b]+=w*s.g;ws[b]+=w;cnt[b]++;}}}
+  }
+  const g=new Float32Array(N),lit=new Uint8Array(N),ton=new Float32Array(N),dep=new Float32Array(N);
+  for(let k=0;k<nz;k++){const d=(k+0.5)*B,li=lithoOf(d);for(let b=k*nx*ny;b<(k+1)*nx*ny;b++){g[b]=cnt[b]>=3?gs[b]/ws[b]:0;lit[b]=li;ton[b]=B*B*B*LITHO[li].d;dep[b]=d;}}
+  return {p,holes,nx,ny,nz,N,X0,Y0,g,lit,ton,dep};
+}
+function econ(M,rf){const p=M.p,net=p.price*rf*(1-p.roy/100)-5,v=new Float64Array(M.N),ore=new Uint8Array(M.N);
+  for(let b=0;b<M.N;b++){const cm=p.cm+p.cminc*M.dep[b]/10,on=M.g[b]/OZ*p.rec/100*net-p.cp-p.cga;ore[b]=on>0?1:0;v[b]=M.ton[b]*(Math.max(on,0)-cm);}
+  return {v,ore};}
+
+// ================= Lerchs-Grossmann par max-flow (Dinic) =================
+function buildGraph(M){
+  const {nx,ny,nz,N}=M;let np=0;
+  for(let k=1;k<nz;k++)for(let j=0;j<ny;j++)for(let i=0;i<nx;i++)for(let dj=-1;dj<=1;dj++)for(let di=-1;di<=1;di++){if(i+di>=0&&i+di<nx&&j+dj>=0&&j+dj<ny)np++;}
+  const m=2*(2*N+np),G={n:N+2,s:N,t:N+1,head:new Int32Array(N+2).fill(-1),to:new Int32Array(m),nx:new Int32Array(m),cap:new Float64Array(m),e:0};
+  const add=(u,v)=>{G.to[G.e]=v;G.nx[G.e]=G.head[u];G.head[u]=G.e++;G.to[G.e]=u;G.nx[G.e]=G.head[v];G.head[v]=G.e++;};
+  for(let b=0;b<N;b++){add(G.s,b);add(b,G.t);}
+  G.precStart=G.e;
+  for(let k=1;k<nz;k++)for(let j=0;j<ny;j++)for(let i=0;i<nx;i++){const b=(k*ny+j)*nx+i;
+    for(let dj=-1;dj<=1;dj++)for(let di=-1;di<=1;di++){const ii=i+di,jj=j+dj;if(ii>=0&&ii<nx&&jj>=0&&jj<ny)add(b,((k-1)*ny+jj)*nx+ii);}}
+  return G;
+}
+function maxClosure(G,v){
+  const {n,s,t,head,to,nx,cap}=G,EPS=1e-6,INF=1e18;cap.fill(0);
+  for(let b=0;b<n-2;b++){cap[4*b]=v[b]>0?v[b]:0;cap[4*b+2]=v[b]<0?-v[b]:0;}
+  for(let e=G.precStart;e<G.e;e+=2)cap[e]=INF;
+  const level=new Int32Array(n),it=new Int32Array(n),q=new Int32Array(n),stN=new Int32Array(n+1),stE=new Int32Array(n+1);
+  const bfs=()=>{level.fill(-1);let h=0,tl=0;q[tl++]=s;level[s]=0;while(h<tl){const u=q[h++];for(let e=head[u];e!==-1;e=nx[e]){const w=to[e];if(cap[e]>EPS&&level[w]<0){level[w]=level[u]+1;q[tl++]=w;}}}return level[t]>=0;};
+  while(bfs()){it.set(head);
+    for(;;){let sp=0,u=s;stN[0]=s;
+      while(u!==t){let e=it[u];while(e!==-1&&!(cap[e]>EPS&&level[to[e]]===level[u]+1))e=nx[e];it[u]=e;
+        if(e!==-1){stE[sp]=e;u=to[e];stN[++sp]=u;}
+        else{if(u===s)break;level[u]=-1;sp--;u=stN[sp];it[u]=nx[it[u]];}}
+      if(u!==t)break;
+      let fl=INF;for(let i=0;i<sp;i++)if(cap[stE[i]]<fl)fl=cap[stE[i]];
+      for(let i=0;i<sp;i++){cap[stE[i]]-=fl;cap[stE[i]^1]+=fl;}}}
+  // fermeture = sommets atteignables depuis s dans le résiduel
+  const inP=new Uint8Array(n-2),vis=new Uint8Array(n);let h=0,tl=0;q[tl++]=s;vis[s]=1;
+  while(h<tl){const u=q[h++];for(let e=head[u];e!==-1;e=nx[e]){const w=to[e];if(cap[e]>EPS&&!vis[w]){vis[w]=1;q[tl++]=w;}}}
+  for(let b=0;b<n-2;b++)inP[b]=vis[b];return inP;
+}
+
+// ================= Coques, pushbacks, séquence =================
+function optimise(M){
+  const G=buildGraph(M),N=M.N,shell=new Int8Array(N).fill(-1),stats=[];
+  const E1=econ(M,1);M.ore=E1.ore;
+  RF.forEach((rf,r)=>{const {v}=econ(M,rf),inP=maxClosure(G,v);for(let b=0;b<N;b++)if(inP[b]&&shell[b]<0)shell[b]=r;});
+  // stats par coque (cumulées, économie à RF=1)
+  RF.forEach((rf,r)=>{let ot=0,oz=0,wt=0;for(let b=0;b<N;b++)if(shell[b]>=0&&shell[b]<=r){if(M.ore[b]){ot+=M.ton[b];oz+=M.ton[b]*M.g[b]/OZ;}else wt+=M.ton[b];}stats.push({rf,ot,oz,wt});});
+  const T=stats.map(s=>s.ot+s.wt),Tf=T[T.length-1]||1,np=Math.max(1,Math.min(6,M.p.npb|0));
+  // coupure des coques au plus près de tranches de tonnage égales (au moins une coque par pushback)
+  const nS=T.length,np2=Math.min(np,nS),cuts=[];let last=-1;
+  for(let q=1;q<np2;q++){let best=-1,bd=Infinity;for(let r=last+1;r<=nS-1-(np2-q);r++){const d=Math.abs(T[r]-q/np2*Tf);if(d<bd){bd=d;best=r;}}cuts.push(best);last=best;}
+  cuts.push(nS-1);
+  let pbOfShell=T.map((t,r)=>cuts.findIndex(c=>r<=c)+1);
+  const used=[...new Set(pbOfShell)].sort((a,b)=>a-b);pbOfShell=pbOfShell.map(p=>used.indexOf(p)+1);
+  const pb=new Int8Array(N);for(let b=0;b<N;b++)pb[b]=shell[b]>=0?pbOfShell[shell[b]]:0;
+  // séquence banc par banc
+  const steps=[],mined=new Int32Array(N).fill(1e9),nl=M.nx*M.ny;
+  for(let q=1;q<=used.length;q++)for(let k=0;k<M.nz;k++){let ot=0,wt=0,oz=0,any=false;const id=steps.length;
+    for(let b=k*nl;b<(k+1)*nl;b++)if(pb[b]===q){any=true;mined[b]=id;if(M.ore[b]){ot+=M.ton[b];oz+=M.ton[b]*M.g[b]/OZ;}else wt+=M.ton[b];}
+    if(any)steps.push({pb:q,k,ot,wt,oz});}
+  let c={ot:0,wt:0,oz:0};steps.forEach(s=>{c={ot:c.ot+s.ot,wt:c.wt+s.wt,oz:c.oz+s.oz};s.c={...c};});
+  Object.assign(M,{shell,pb,npb:used.length,stats,steps,mined,pbOfShell});
+}
+
+// ================= Rendu 3D =================
+const cv=$("c3d"),ctx=cv.getContext("2d");
+const V={yaw:-0.62,pitch:0.6,zoom:1,px:0,py:0};
+let FACES=null,STEP=-1,timer=null;
+function present(b,i,j){const s=STATE;if(M.mined[b]<=STEP)return false;if(s.cutax==="y"?j<s.cut:s.cutax==="x"?i>s.cut:false)return false;if(!s.waste&&!M.ore[b])return false;return true;}
+let STATE={};
+function readState(){STATE={mode:$("mode").value,waste:$("waste").checked,holes:$("holes").checked,cutax:$("cutax").value,cut:+$("cut").value};}
+function blockColor(b){
+  if(STATE.mode==="pb"){if(M.pb[b])return PBC[(M.pb[b]-1)%PBC.length];const c=LITHO[M.lit[b]].c;return [c[0]*0.55+120,c[1]*0.55+120,c[2]*0.55+120];}
+  return M.ore[b]?oreCol(M.g[b]):LITHO[M.lit[b]].c;}
+function buildFaces(){
+  readState();const {nx,ny,nz}=M,nl=nx*ny,list=[];
+  const pres=new Uint8Array(M.N);
+  for(let k=0;k<nz;k++)for(let j=0;j<ny;j++)for(let i=0;i<nx;i++){const b=(k*ny+j)*nx+i;pres[b]=present(b,i,j)?1:0;}
+  for(let k=0;k<nz;k++)for(let j=0;j<ny;j++)for(let i=0;i<nx;i++){const b=(k*ny+j)*nx+i;if(!pres[b])continue;const c=blockColor(b);
+    if(k===0||!pres[b-nl])list.push(b,0);
+    if(i===nx-1||!pres[b+1])list.push(b,1);
+    if(i===0||!pres[b-1])list.push(b,2);
+    if(j===ny-1||!pres[b+nx])list.push(b,3);
+    if(j===0||!pres[b-nx])list.push(b,4);}
+  const n=list.length/2,fb=new Int32Array(n),ft=new Uint8Array(n),col=[];
+  for(let q=0;q<n;q++){fb[q]=list[2*q];ft[q]=list[2*q+1];}
+  const cache=new Map();
+  for(let q=0;q<n;q++){const c=blockColor(fb[q]),sh=ft[q]===0?1:ft[q]<=2?0.8:0.66,key=c.join()+sh;let s=cache.get(key);if(!s){s=[rgb(c,sh),rgb(c,sh*0.82)];cache.set(key,s);}col.push(s);}
+  FACES={n,fb,ft,col};
+}
+function resize(){const r=cv.getBoundingClientRect(),d=devicePixelRatio||1;cv.width=r.width*d;cv.height=r.height*d;ctx.setTransform(d,0,0,d,0,0);}
+function draw(){
+  if(!M||!FACES)return;const r=cv.getBoundingClientRect(),W=r.width,H=r.height;
+  ctx.clearRect(0,0,W,H);
+  const {nx,ny,nz,X0,Y0}=M,cx=X0+nx*B/2,cy=Y0+ny*B/2,cz=-nz*B/2;
+  const cY=Math.cos(V.yaw),sY=Math.sin(V.yaw),cP=Math.cos(V.pitch),sP=Math.sin(V.pitch);
+  const sc=0.92*Math.min(W,H*1.6)/Math.hypot(nx*B,ny*B)*V.zoom;
+  const pr=(x,y,z)=>{x-=cx;y-=cy;z-=cz;const xr=x*cY-y*sY,yr=x*sY+y*cY;return [W/2+V.px+xr*sc,H/2+V.py-(yr*sP+z*cP)*sc,yr*cP-z*sP];};
+  // visibilité des faces
+  const nrm=[[0,0,1],[1,0,0],[-1,0,0],[0,1,0],[0,-1,0]].map(([a,b,c])=>{const yr=a*sY+b*cY;return yr*cP-c*sP<0;});
+  const {n,fb,ft,col}=FACES,idx=[],dep=new Float32Array(n),nl=nx*ny;
+  for(let q=0;q<n;q++){if(!nrm[ft[q]])continue;const b=fb[q],k=(b/nl)|0,j=((b%nl)/nx)|0,i=b%nx;
+    let x=X0+(i+0.5)*B,y=Y0+(j+0.5)*B,z=-(k+0.5)*B;const t=ft[q],h=B/2;
+    if(t===0)z+=h;else if(t===1)x+=h;else if(t===2)x-=h;else if(t===3)y+=h;else y-=h;
+    const xr=(x-cx)*cY-(y-cy)*sY,yr=(x-cx)*sY+(y-cy)*cY;dep[q]=yr*cP-(z-cz)*sP;idx.push(q);}
+  idx.sort((a,b)=>dep[b]-dep[a]);
+  ctx.lineWidth=0.6;
+  for(const q of idx){const b=fb[q],k=(b/nl)|0,j=((b%nl)/nx)|0,i=b%nx,x0=X0+i*B,x1=x0+B,y0=Y0+j*B,y1=y0+B,zt=-k*B,zb=zt-B,t=ft[q];let P4;
+    if(t===0)P4=[[x0,y0,zt],[x1,y0,zt],[x1,y1,zt],[x0,y1,zt]];
+    else if(t===1)P4=[[x1,y0,zt],[x1,y1,zt],[x1,y1,zb],[x1,y0,zb]];
+    else if(t===2)P4=[[x0,y0,zt],[x0,y1,zt],[x0,y1,zb],[x0,y0,zb]];
+    else if(t===3)P4=[[x0,y1,zt],[x1,y1,zt],[x1,y1,zb],[x0,y1,zb]];
+    else P4=[[x0,y0,zt],[x1,y0,zt],[x1,y0,zb],[x0,y0,zb]];
+    ctx.beginPath();for(let a=0;a<4;a++){const s=pr(...P4[a]);a?ctx.lineTo(s[0],s[1]):ctx.moveTo(s[0],s[1]);}ctx.closePath();
+    ctx.fillStyle=col[q][0];ctx.fill();ctx.strokeStyle=col[q][1];ctx.stroke();}
+  if(STATE.holes){ctx.lineWidth=2;M.holes.filter(h=>STATE.cutax!=="x"||h.xc<=M.X0+(STATE.cut+1)*B).forEach(h=>{const a=pr(h.xc,h.yc,0),e=pr(h.xc,h.yc-h.eoh*h.ca,-h.eoh*h.sa);
+    ctx.strokeStyle="rgba(15,23,42,.55)";ctx.setLineDash([5,3]);ctx.beginPath();ctx.moveTo(a[0],a[1]);ctx.lineTo(e[0],e[1]);ctx.stroke();ctx.setLineDash([]);
+    h.env.forEach(en=>{const p1=pr(h.xc,h.yc-en.from*h.ca,-en.from*h.sa),p2=pr(h.xc,h.yc-en.to*h.ca,-en.to*h.sa);ctx.strokeStyle=rgb(oreCol(en.au));ctx.lineWidth=5;ctx.beginPath();ctx.moveTo(p1[0],p1[1]);ctx.lineTo(p2[0],p2[1]);ctx.stroke();ctx.lineWidth=2;});
+    ctx.fillStyle="#0f172a";ctx.beginPath();ctx.arc(a[0],a[1],3,0,7);ctx.fill();ctx.font="600 11px system-ui";ctx.fillStyle="#0f172a";ctx.fillText(h.h,a[0]+5,a[1]-5);});}
+  // flèche Nord-indicative / axes
+  const o=pr(X0,Y0,0),ax=pr(X0+100,Y0,0),ay=pr(X0,Y0+100,0);ctx.lineWidth=2;ctx.strokeStyle="#334155";ctx.fillStyle="#334155";ctx.font="11px system-ui";
+  ctx.beginPath();ctx.moveTo(o[0],o[1]);ctx.lineTo(ax[0],ax[1]);ctx.moveTo(o[0],o[1]);ctx.lineTo(ay[0],ay[1]);ctx.stroke();ctx.fillText("X direction 100 m",ax[0]+4,ax[1]);ctx.fillText("Y pendage",ay[0]+4,ay[1]);
+}
+
+// ================= HUD / progression =================
+function curStats(){if(STEP<0)return {ot:0,wt:0,oz:0};return M.steps[Math.min(STEP,M.steps.length-1)].c;}
+function renderHud(){
+  const s=STEP>=0?M.steps[STEP]:null,c=curStats(),tot=c.ot+c.wt,yr=tot/1e6/M.p.rate;
+  $("hud").innerHTML=s?`<b>Pushback ${s.pb}</b> · banc ${s.k+1} (cote −${s.k*B} à −${(s.k+1)*B} m)<br>Étape ${STEP+1} / ${M.steps.length} · <b>année ~${f(yr,1)}</b><br>Minerai cumulé ${f(c.ot/1e6,2)} Mt à ${f(c.ot?c.oz*OZ/c.ot:0,2)} g/t<br>Stérile cumulé ${f(c.wt/1e6,2)} Mt · SR ${f(c.ot?c.wt/c.ot:0,1)}<br>Or contenu ${f(c.oz/1e3,0)} koz`:`<b>Avant exploitation</b><br>${M.steps.length} étapes (pushback × banc) · ${M.npb} pushbacks<br>Lecture ▶ pour animer l'excavation.`;
+  const F=M.steps.length?M.steps[M.steps.length-1].c:{ot:0,wt:0,oz:0};
+  $("prog").innerHTML=[[f(c.ot/1e6,2)+" / "+f(F.ot/1e6,2)+" Mt","minerai miné / fosse finale"],[f(c.ot?c.oz*OZ/c.ot:0,2)+" g/t","teneur moyenne minée"],[f(c.oz/1e3,0)+" / "+f(F.oz/1e3,0)+" koz","or contenu miné / final"],[f(c.wt/1e6,1)+" Mt","stérile déplacé"],[f(c.ot?c.wt/c.ot:0,1)+" : 1","ratio de découverture cumulé"],["~"+f(tot/1e6/M.p.rate,1)+" ans","à "+M.p.rate+" Mt/an de mouvement"]]
+    .map(x=>`<div class="kpi"><b>${x[0]}</b><span>${x[1]}</span></div>`).join("");
+}
+function setStep(s){STEP=Math.max(-1,Math.min(M.steps.length-1,s));$("step").value=STEP;buildFaces();draw();renderHud();drawSection();}
+
+// ================= Coupe 2D =================
+const cs=$("csec"),sx=cs.getContext("2d");
+function drawSection(){
+  if(!M)return;const r=cs.getBoundingClientRect(),d=devicePixelRatio||1;cs.width=r.width*d;cs.height=r.height*d;sx.setTransform(d,0,0,d,0,0);
+  const W=r.width,H=r.height,{nx,ny,nz,X0,Y0}=M,i=+$("sec").value,L=40,T=12,Bm=24;
+  const cw=(W-L-10)/ny,ch=Math.min((H-T-Bm)/nz,cw*1.0),sky=getComputedStyle(document.documentElement).getPropertyValue("--sky").trim();
+  sx.clearRect(0,0,W,H);
+  const Y=j=>L+j*cw,Z=k=>T+k*ch;
+  for(let k=0;k<nz;k++)for(let j=0;j<ny;j++){const b=(k*ny+j)*nx+i;sx.fillStyle=M.mined[b]<=STEP?sky:rgb(STATE.mode==="pb"&&M.pb[b]?PBC[(M.pb[b]-1)%6]:(M.ore[b]?oreCol(M.g[b]):LITHO[M.lit[b]].c));sx.fillRect(Y(j),Z(k),cw+0.5,ch+0.5);}
+  // limites pushbacks
+  sx.lineWidth=2.2;
+  for(let k=0;k<nz;k++)for(let j=0;j<ny;j++){const b=(k*ny+j)*nx+i,p=M.pb[b];
+    if(j<ny-1){const q=M.pb[b+nx];if(p!==q){sx.strokeStyle=rgb(PBC[(Math.max(p,q)-1)%6]);sx.beginPath();sx.moveTo(Y(j+1),Z(k));sx.lineTo(Y(j+1),Z(k+1));sx.stroke();}}
+    if(k<nz-1){const q=M.pb[b+nx*ny];if(p!==q){sx.strokeStyle=rgb(PBC[(Math.max(p,q)-1)%6]);sx.beginPath();sx.moveTo(Y(j),Z(k+1));sx.lineTo(Y(j+1),Z(k+1));sx.stroke();}}}
+  // surface actuelle
+  sx.strokeStyle="#111";sx.lineWidth=3;
+  for(let k=0;k<nz;k++)for(let j=0;j<ny;j++){const b=(k*ny+j)*nx+i,m=M.mined[b]<=STEP;
+    if(j<ny-1&&m!==(M.mined[b+nx]<=STEP)){sx.beginPath();sx.moveTo(Y(j+1),Z(k));sx.lineTo(Y(j+1),Z(k+1));sx.stroke();}
+    if(m&&(k===nz-1||M.mined[b+nx*ny]>STEP)){sx.beginPath();sx.moveTo(Y(j),Z(k+1));sx.lineTo(Y(j+1),Z(k+1));sx.stroke();}}
+  // forages proches
+  const xs=X0+(i+0.5)*B,yS=y=>L+(y-Y0)/B*cw,zS=z=>T+(-z)/B*ch;
+  M.holes.filter(h=>Math.abs(h.xc-xs)<=B).forEach(h=>{sx.strokeStyle="#0f172a";sx.lineWidth=1.3;sx.setLineDash([4,3]);sx.beginPath();sx.moveTo(yS(h.yc),zS(0));sx.lineTo(yS(h.yc-h.eoh*h.ca),zS(-h.eoh*h.sa));sx.stroke();sx.setLineDash([]);
+    h.env.forEach(e=>{sx.strokeStyle="#0f172a";sx.lineWidth=7;sx.beginPath();sx.moveTo(yS(h.yc-e.from*h.ca),zS(-e.from*h.sa));sx.lineTo(yS(h.yc-e.to*h.ca),zS(-e.to*h.sa));sx.stroke();
+      sx.strokeStyle=rgb(oreCol(e.au));sx.lineWidth=4.5;sx.stroke();sx.fillStyle="#0f172a";sx.font="10.5px system-ui";sx.fillText(f(e.au)+" g/t × "+f(e.tw)+" m",yS(h.yc-e.to*h.ca)+6,zS(-(e.from+e.to)/2*h.sa)+4);});
+    sx.font="600 11px system-ui";sx.fillText(h.h,yS(h.yc)+4,zS(0)+12);});
+  sx.fillStyle=getComputedStyle(document.documentElement).getPropertyValue("--mut");sx.font="10.5px system-ui";
+  for(let k=0;k<=nz;k+=2)sx.fillText("−"+k*B,4,Z(k)+4);
+  for(let j=0;j<=ny;j+=10)sx.fillText((Y0+j*B)+" m",Y(j),Z(nz)+14);
+  $("seclbl").textContent=`X = ${f(xs,0)} m`;
+}
+
+// ================= Pit-by-pit & tables =================
+function renderTables(){
+  const s=M.stats,W=520,H=230,L=46,R=46,T=10,Bt=36,tmax=Math.max(...s.map(x=>x.ot+x.wt))/1e6||1,omax=Math.max(...s.map(x=>x.oz))/1e3||1;
+  const X=i=>L+(i+0.5)*(W-L-R)/s.length,bw=(W-L-R)/s.length*0.6,Yt=v=>T+(1-v/tmax)*(H-T-Bt),Yo=v=>T+(1-v/omax)*(H-T-Bt);let b="";
+  s.forEach((x,i)=>{const p=M.pbOfShell[i],c=rgb(PBC[(p-1)%6]);b+=`<rect x="${X(i)-bw/2}" y="${Yt((x.ot+x.wt)/1e6)}" width="${bw}" height="${Yt(x.ot/1e6)-Yt((x.ot+x.wt)/1e6)}" fill="${c}" fill-opacity=".35"/><rect x="${X(i)-bw/2}" y="${Yt(x.ot/1e6)}" width="${bw}" height="${H-Bt-Yt(x.ot/1e6)}" fill="${c}"/><text x="${X(i)}" y="${H-Bt+14}" text-anchor="middle">${f(x.rf,2)}</text>`;});
+  b+=`<path d="${s.map((x,i)=>(i?"L":"M")+X(i)+","+Yo(x.oz/1e3)).join("")}" fill="none" stroke="#b7791f" stroke-width="2.2"/>`+s.map((x,i)=>`<circle cx="${X(i)}" cy="${Yo(x.oz/1e3)}" r="3" fill="#b7791f"/>`).join("");
+  b+=`<text x="${L-6}" y="${T+8}" text-anchor="end">${f(tmax,1)} Mt</text><text x="${W-R+6}" y="${T+8}" style="fill:#b7791f">${f(omax,0)} koz</text><text x="${(L+W-R)/2}" y="${H-4}" text-anchor="middle">Facteur de revenu (coque)</text>`;
+  $("pbp").innerHTML=svg(W,H,b)+`<div class="legend"><span>barre pleine = minerai · barre claire = stérile · couleur = pushback · ligne = or contenu (koz)</span></div>`;
+  const rows=[];for(let q=1;q<=M.npb;q++){let ot=0,wt=0,oz=0;M.steps.filter(s=>s.pb===q).forEach(s=>{ot+=s.ot;wt+=s.wt;oz+=s.oz;});rows.push([q,ot,wt,oz]);}
+  const T2=rows.reduce((a,r)=>[0,a[1]+r[1],a[2]+r[2],a[3]+r[3]],[0,0,0,0]);
+  const tr=(lab,r,st="")=>`<tr${st}><td>${lab}</td><td>${f(r[1]/1e6,2)}</td><td>${f(r[1]?r[3]*OZ/r[1]:0,2)}</td><td>${f(r[3]/1e3,0)}</td><td>${f(r[2]/1e6,2)}</td><td>${f(r[1]?r[2]/r[1]:0,1)}</td><td>${f((r[1]+r[2])/1e6/M.p.rate,1)}</td></tr>`;
+  $("tpb").innerHTML="<thead><tr><th>Phase</th><th>Minerai Mt</th><th>g/t</th><th>koz</th><th>Stérile Mt</th><th>SR</th><th>Années</th></tr></thead><tbody>"+rows.map(r=>tr(`<i style="display:inline-block;width:11px;height:11px;background:${rgb(PBC[(r[0]-1)%6])};margin-right:5px;border-radius:2px"></i>PB${r[0]}`,r)).join("")+tr("<b>Total fosse</b>",T2,' style="font-weight:700"')+"</tbody>";
+}
+function svg(w,h,b){return `<svg viewBox="0 0 ${w} ${h}">${b}</svg>`;}
+function renderLegend(){
+  const c=(col,lab)=>`<span><i style="background:${rgb(col)}"></i>${lab}</span>`;
+  $("leg").innerHTML=`<b>Stérile :</b>`+LITHO.map(l=>c(l.c,l.n)).join("")+`<b style="margin-left:8px">Minerai :</b>`+ORE.map(o=>c(o.c,o.n)).join("")+
+    (M?`<b style="margin-left:8px">Pushbacks :</b>`+Array.from({length:M.npb},(_,q)=>c(PBC[q%6],"PB"+(q+1))).join(""):"")+`<span>coupure marginale à RF 1 : <b>${M?f(M.cut,2):"–"} g/t</b></span>`;
+}
+
+// ================= Orchestration =================
+function compute(){
+  $("busy").style.display="flex";stop();
+  setTimeout(()=>{const t0=performance.now();const p=P();M=buildModel(p);optimise(M);
+    M.cut=(p.cp+p.cga)/(p.rec/100*(p.price*(1-p.roy/100)-5)/OZ);M.ms=performance.now()-t0;
+    M.iMain=Math.floor((M.holes.reduce((a,b)=>a.env.reduce((s,e)=>s+e.au*e.tw,0)>b.env.reduce((s,e)=>s+e.au*e.tw,0)?a:b).xc-M.X0)/B);$("step").max=M.steps.length-1;$("cut").max=$("cutax").value==="y"?M.ny-1:M.nx-1;$("cut").value=$("cutax").value==="x"?M.iMain:0;
+    $("sec").max=M.nx-1;$("secsel").innerHTML=M.holes.map(h=>`<option value="${Math.floor((h.xc-M.X0)/B)}">${h.h}</option>`).join("");
+    const main=M.holes.reduce((a,b)=>a.env.reduce((s,e)=>s+e.au*e.tw,0)>b.env.reduce((s,e)=>s+e.au*e.tw,0)?a:b);$("secsel").value=Math.floor((main.xc-M.X0)/B);$("sec").value=$("secsel").value;
+    renderLegend();renderTables();resize();setStep(-1);$("busy").style.display="none";console.log("calcul",M.N,"blocs",Math.round(M.ms),"ms");},30);
+}
+function stop(){if(timer){clearInterval(timer);timer=null;$("play").textContent="▶ Lecture";}}
+$("play").onclick=()=>{if(timer){stop();return;}if(STEP>=M.steps.length-1)setStep(-1);$("play").textContent="⏸ Pause";
+  timer=setInterval(()=>{if(STEP>=M.steps.length-1){stop();return;}setStep(STEP+1);},+$("speed").value);};
+$("speed").onchange=()=>{if(timer){stop();$("play").click();}};
+$("reset0").onclick=()=>{stop();setStep(-1);};$("end").onclick=()=>{stop();setStep(M.steps.length-1);};
+$("step").oninput=e=>{stop();setStep(+e.target.value);};
+["mode","waste","holes"].forEach(id=>$(id).onchange=()=>{buildFaces();draw();drawSection();});
+$("cutax").onchange=()=>{$("cut").max=$("cutax").value==="y"?M.ny-1:M.nx-1;$("cut").value=$("cutax").value==="x"?M.iMain:0;buildFaces();draw();};
+$("cut").oninput=()=>{buildFaces();draw();};
+$("secsel").onchange=()=>{$("sec").value=$("secsel").value;drawSection();};
+$("sec").oninput=drawSection;
+$("calc").onclick=compute;$("dep").onchange=compute;
+$("view").onclick=()=>{Object.assign(V,{yaw:-0.62,pitch:0.6,zoom:1,px:0,py:0});draw();};
+// interactions souris / tactile
+let drag=null;
+cv.addEventListener("pointerdown",e=>{drag={x:e.clientX,y:e.clientY,pan:e.shiftKey||e.button===2};cv.setPointerCapture(e.pointerId);});
+cv.addEventListener("pointermove",e=>{if(!drag)return;const dx=e.clientX-drag.x,dy=e.clientY-drag.y;drag.x=e.clientX;drag.y=e.clientY;
+  if(drag.pan){V.px+=dx;V.py+=dy;}else{V.yaw+=dx*0.008;V.pitch=Math.max(0.08,Math.min(1.45,V.pitch+dy*0.006));}draw();});
+cv.addEventListener("pointerup",()=>drag=null);cv.addEventListener("contextmenu",e=>e.preventDefault());
+cv.addEventListener("wheel",e=>{e.preventDefault();V.zoom=Math.max(0.3,Math.min(6,V.zoom*(e.deltaY<0?1.12:0.89)));draw();},{passive:false});
+addEventListener("resize",()=>{resize();draw();drawSection();});
+compute();
+</script>
+</body>
+</html>
