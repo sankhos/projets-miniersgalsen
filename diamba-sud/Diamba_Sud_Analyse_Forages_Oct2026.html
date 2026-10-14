@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Diamba Sud — Analyse forages</title>
+<style>
+:root{
+  --bg:#f6f7f9;--card:#ffffff;--ink:#17202b;--mut:#5b6877;--line:#dde2e8;
+  --sa:#c2410c;--ksk:#1d4ed8;--gold:#b7791f;--ok:#15803d;--warn:#b45309;--bad:#b91c1c;
+  --g1:#fde68a;--g2:#fbbf24;--g3:#f59e0b;--g4:#d97706;--g5:#92400e;--hi:#dc2626;
+}
+@media (prefers-color-scheme:dark){:root{
+  --bg:#0f141a;--card:#171e27;--ink:#e6ebf1;--mut:#97a3b2;--line:#2a3441;
+  --sa:#fb923c;--ksk:#60a5fa;--gold:#f6c453;--ok:#4ade80;--warn:#fbbf24;--bad:#f87171;
+}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+header{padding:22px 16px 14px;border-bottom:1px solid var(--line);background:var(--card)}
+header h1{margin:0 0 4px;font-size:22px}
+header p{margin:0;color:var(--mut)}
+nav{position:sticky;top:0;z-index:5;background:var(--card);border-bottom:1px solid var(--line);overflow-x:auto;white-space:nowrap;padding:6px 10px}
+nav a{display:inline-block;padding:5px 9px;margin-right:2px;color:var(--mut);text-decoration:none;border-radius:6px;font-size:13px}
+nav a:hover{background:var(--bg);color:var(--ink)}
+main{max-width:1180px;margin:0 auto;padding:16px}
+section{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:18px;margin-bottom:16px}
+h2{margin:0 0 10px;font-size:18px}
+h3{margin:16px 0 6px;font-size:15px}
+.mut{color:var(--mut)}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin:10px 0}
+.kpi{border:1px solid var(--line);border-radius:8px;padding:10px 12px}
+.kpi b{display:block;font-size:20px}
+.kpi span{color:var(--mut);font-size:12px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:820px){.grid2{grid-template-columns:1fr}}
+.tw{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:12.5px}
+th,td{padding:5px 7px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+th{position:sticky;top:0;background:var(--card);cursor:pointer;color:var(--mut);font-weight:600}
+td:nth-child(-n+3),th:nth-child(-n+3){text-align:left}
+tr.inc td{color:var(--mut);font-size:11.5px}
+.tag{display:inline-block;padding:1px 7px;border-radius:10px;font-size:11px;font-weight:600;color:#fff}
+.tSA{background:var(--sa)}.tKSK{background:var(--ksk)}
+.pill{padding:1px 7px;border-radius:10px;font-size:11px;font-weight:600;border:1px solid currentColor}
+.ok{color:var(--ok)}.warn{color:var(--warn)}.bad{color:var(--bad)}
+.ctrl{display:flex;flex-wrap:wrap;gap:12px;align-items:end;margin:8px 0 12px}
+.ctrl label{font-size:12px;color:var(--mut);display:flex;flex-direction:column;gap:3px}
+input[type=number]{width:86px;padding:4px 6px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink)}
+select,button{padding:5px 9px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink)}
+button{cursor:pointer;font-weight:600}
+svg{display:block;width:100%;height:auto}
+svg text{fill:var(--mut);font-size:11px}
+.note{border-left:3px solid var(--gold);background:var(--bg);padding:8px 12px;border-radius:0 6px 6px 0;margin:10px 0}
+.alert{border-left-color:var(--bad)}
+ul{margin:6px 0;padding-left:20px}li{margin:3px 0}
+.mc{display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));gap:14px}
+.mcbox{border:1px solid var(--line);border-radius:8px;padding:12px}
+.mcbox table td,.mcbox table th{text-align:right}
+.mcbox table td:first-child,.mcbox table th:first-child{text-align:left}
+.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:12px;color:var(--mut);margin-top:6px}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:2px;margin-right:4px;vertical-align:-2px}
+footer{text-align:center;color:var(--mut);font-size:12px;padding:10px 16px 30px}
+@media print{nav{display:none}section{break-inside:avoid}}
+</style>
+</head>
+<body>
+<header>
+  <h1>Diamba Sud (Sénégal) — Analyse des résultats de forage d'octobre 2026</h1>
+  <p>Southern Arc · Kassasoko · Bambadji/Kabewest — source : communiqué Fortuna Mining (FSM/FVI) du 13/10/2026. Lecture d'ingénieur planification : gram-mètres, effet pépite, top-cut, profils de forage, cible d'exploration conceptuelle et screening fosse.</p>
+</header>
+<nav>
+  <a href="#s1">1. Synthèse</a><a href="#s2">2. Base intercepts</a><a href="#s3">3. Teneur × épaisseur</a>
+  <a href="#s4">4. Profils de forage</a><a href="#s5">5. Pépite & top-cut</a><a href="#s6">6. SA vs Kassasoko</a>
+  <a href="#s7">7. Bambadji</a><a href="#s8">8. Modèle cible</a><a href="#s9">9. Screening fosse</a>
+  <a href="#s10">10. Interprétation</a><a href="#s11">11. QA/QC communiqué</a><a href="#s12">12. Recommandations</a>
+</nav>
+<main>
+
+<section id="s1">
+  <h2>1. Synthèse exécutive</h2>
+  <div class="kpis" id="kpis"></div>
+  <div class="note">
+    <b>Lecture rapide.</b> Les 22 enveloppes publiées (11 Southern Arc, 11 Kassasoko) totalisent <b id="k_gm"></b> gram-mètres. Le titre « 7,8 g/t sur 12,8 m » (DSR1128) est porté à <b>72 %</b> par 1,6 m de pics (59,5 et 29,8 g/t) : écrêté à 20 g/t, il retombe vers <b>4,7 g/t</b>. L'intercept le plus solide du programme est <b>DSR1149 (3,9 g/t / 40,8 m, 159 g·m)</b> : métal diffus, insensible au top-cut, mais à ~220 m de profondeur verticale. Pour la fosse, ce sont <b>DSDD799 (1,8 g/t / 56,8 m dès 26 m)</b> et <b>DSR1132 (4,5 g/t / 20 m dès 65 m)</b> qui comptent le plus : métal proche de la surface, faible découverture.
+  </div>
+  <ul>
+    <li><b>Réserve FS de référence</b> : 20,5 Mt à 1,75 g/t = 1,15 Moz probables (contrôle : 20,5 × 1,75 / 31,1035 = 1,153 Moz ✔).</li>
+    <li><b>Teneur pondérée des enveloppes</b> : 3,2 g/t brute, ~2,9 g/t écrêtée à 20 g/t — à lire comme un biais de sélection (communiqué = meilleurs trous), pas comme une teneur de ressource.</li>
+    <li><b>Effet pépite marqué</b> : ~47 % du métal tient dans des pics de 0,8 à 1,6 m qui représentent ~10 % de la largeur. Le top-cut et la stratégie de contrôle des teneurs feront la réconciliation.</li>
+    <li><b>Bambadji/Kabewest</b> : cible satellite à 2,3 km de l'usine projetée ; 8 M$ / 51 000 m (~157 $/m) — pas de résultats d'analyse encore, première ressource présumée attendue au T1 2027.</li>
+  </ul>
+</section>
+
+<section id="s2">
+  <h2>2. Base de données des intercepts</h2>
+  <p class="mut">Largeurs = largeurs réelles estimées (TW). Longueur forée déduite DH = TW / 0,8 (1 échantillon de 1 m = 0,8 m TW dans tout le communiqué). Profondeur verticale au milieu de l'intercept = (de + DH/2) × sin(inclinaison).</p>
+  <div class="ctrl">
+    <label>Top-cut (g/t)<input type="number" id="cap" value="20" step="1" min="5"></label>
+    <label>Inclinaison forages (°)<input type="number" id="dip" value="60" step="5" min="40" max="90"></label>
+    <label>Gisement<select id="fdep"><option value="">Tous</option><option>Southern Arc</option><option>Kassasoko</option></select></label>
+    <label>Afficher<select id="finc"><option value="0">Enveloppes</option><option value="1">Enveloppes + pics inclus</option></select></label>
+    <button id="csv">Exporter CSV</button>
+  </div>
+  <div class="tw"><table id="tbl"></table></div>
+</section>
+
+<section id="s3">
+  <h2>3. Teneur × épaisseur (GT)</h2>
+  <div class="grid2">
+    <div><h3>Teneur vs largeur réelle (taille = gram-mètres)</h3><div id="scatter"></div>
+      <div class="legend"><span><i style="background:var(--sa)"></i>Southern Arc</span><span><i style="background:var(--ksk)"></i>Kassasoko</span><span>courbes = iso-gram-mètres 25 / 50 / 100 / 150</span></div></div>
+    <div><h3>Classement gram-mètres (brut vs écrêté)</h3><div id="bars"></div>
+      <div class="legend"><span><i style="background:var(--gold)"></i>écrêté</span><span><i style="background:var(--line)"></i>métal perdu au top-cut</span></div></div>
+  </div>
+  <div class="note">Seuil d'intérêt pratique pour une fosse à 3 500 $/oz : <b>&gt; 20 g·m</b> à moins de 150 m vertical. Au-delà de 50 g·m, l'intercept pèse sur le design de la coque. Les intercepts « épais / modérés » (DSDD799, DSDD715-E1, DSR1149-E2) sont plus fiables pour la planification que les « minces / riches » (DSR1122-E2, DSR1157-E3) dont le métal est quasi ponctuel.</div>
+</section>
+
+<section id="s4">
+  <h2>4. Profils de forage schématiques (sections le long du trou)</h2>
+  <p class="mut">Axe vertical = profondeur le long du trou (m). Rectangles = enveloppes colorées par classe de teneur ; traits rouges = pics inclus &gt; 10 g/t. Lecture type « log de sondage » pour repérer empilement de lentilles, continuité et position par rapport à la fosse FS (ligne pointillée indicative à 120 m vertical, à remplacer par la coque réelle).</p>
+  <div id="strip"></div>
+  <div class="legend">
+    <span><i style="background:var(--g1)"></i>&lt;1,5 g/t</span><span><i style="background:var(--g2)"></i>1,5–2,5</span><span><i style="background:var(--g3)"></i>2,5–4</span><span><i style="background:var(--g4)"></i>4–6</span><span><i style="background:var(--g5)"></i>&gt;6</span><span><i style="background:var(--hi)"></i>pic &gt;10 g/t</span>
+  </div>
+</section>
+
+<section id="s5">
+  <h2>5. Effet pépite et sensibilité au top-cut</h2>
+  <div class="grid2">
+    <div><h3>Teneur pondérée vs top-cut</h3><div id="capcurve"></div></div>
+    <div><h3>Part du métal portée par les pics (par enveloppe)</h3><div id="share"></div></div>
+  </div>
+  <div class="note alert"><b>Lecture.</b> Entre « sans top-cut » et 20 g/t on perd ~9 % de la teneur moyenne ; à 10 g/t on perd ~25 %. Les deux pics à ~60 g/t (DSR1128, DSR1132) dominent à eux seuls la sensibilité. Ce sont des forages RC : le risque de contamination / de traînée en fond de trou (smearing) et la représentativité d'un split de 12,5 % sur or grossier doivent être vérifiés (duplicatas terrain, refente en DD jumeau, analyse sur grande masse type LeachWELL ou PhotonAssay).</div>
+</section>
+
+<section id="s6">
+  <h2>6. Southern Arc vs Kassasoko</h2>
+  <div class="tw"><table id="cmp"></table></div>
+  <div class="grid2" style="margin-top:12px">
+    <div>
+      <h3>Southern Arc</h3>
+      <ul>
+        <li>196 trous RC/DD, 36 592 m (~187 m/trou) — programme clôturé.</li>
+        <li>Extensions NE/SO en direction et en profondeur + structures parallèles au SE, ouvertes.</li>
+        <li>Style : réseaux filoniens fins + imprégnation pyrite-silice diffuse, brèches hydrothermales et unités carbonatées, altération hématitique.</li>
+        <li>Enveloppes épaisses (moy. ~22 m TW) → corps massifs, favorables à une exploitation à fort tonnage et à un SMU de 5 × 5 × 2,5 m.</li>
+      </ul>
+    </div>
+    <div>
+      <h3>Kassasoko</h3>
+      <ul>
+        <li>53 trous RC/DD, 8 787 m (~166 m/trou) — test de l'extension et du lien avec Western Splay.</li>
+        <li>Lentilles empilées plus minces (DSR1119 : 3 × 5,6 m), teneurs plus fortes dans les zones étroites.</li>
+        <li>Encaissant : brèches hydrothermales intercalées, métasédiments carbonatés, intrusifs granitiques à dioritiques ; réseaux de veines.</li>
+        <li>Plus sensible à la dilution : contrôle des teneurs serré (RC GC à maille ≤ 10 × 10 m, marquage de toit/mur).</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section id="s7">
+  <h2>7. Bambadji / Kabewest — lecture stratégique</h2>
+  <div class="kpis">
+    <div class="kpi"><b>6</b><span>foreuses (5 DD + 1 RC)</span></div>
+    <div class="kpi"><b>51 000 m</b><span>programme fin 2026</span></div>
+    <div class="kpi"><b>8 M$</b><span>budget</span></div>
+    <div class="kpi"><b>~157 $/m</b><span>coût moyen tout compris</span></div>
+    <div class="kpi"><b>2,3 km</b><span>Kabewest → usine projetée</span></div>
+    <div class="kpi"><b>&gt; 60 km</b><span>de linéaire de permis</span></div>
+  </div>
+  <ul>
+    <li><b>Logique satellite</b> : à 2,3 km, le roulage d'un minerai Kabewest vers l'usine coûte de l'ordre de 0,3–0,5 $/t de plus qu'un minerai interne (≈ 0,15 $/t·km). Une ressource même modeste (&gt; 200 koz) allonge la vie de l'usine sans infrastructure lourde.</li>
+    <li><b>Style comparable à Diamba Sud</b> (brèche hydrothermale, hématite-silice, pyrite, analogue zone D) : la métallurgie FS a des chances d'être transposable, à confirmer par tests de lixiviation.</li>
+    <li><b>Coût/m</b> : 157 $/m est bas pour un programme à 5 foreuses DD en Afrique de l'Ouest (DD couramment 180–260 $/m tout compris). Soit une part importante de RC/pré-collets RC, soit un périmètre de coûts limité au forage. À garder en tête pour le calcul du coût de découverte.</li>
+    <li><b>Calendrier</b> : ressource présumée Kabewest au T1 2027 → non utilisable en réserve/plan tant qu'elle n'est pas convertie en indiquée (maille de remplissage + densités + métallurgie). Horizon réaliste d'intégration au plan minier : mise à jour 2028.</li>
+  </ul>
+</section>
+
+<section id="s8">
+  <h2>8. Modèle — cible d'exploration conceptuelle (Monte-Carlo)</h2>
+  <div class="note alert"><b>Avertissement réglementaire.</b> Ceci n'est <u>ni une ressource ni une réserve</u> au sens NI 43-101 / JORC / CRIRSCO. C'est un ordre de grandeur de type « cible d'exploration » (JORC 2012 cl. 17), construit sur des hypothèses géométriques. La quantité et la teneur sont conceptuelles ; les forages ne suffisent pas à définir une ressource.</div>
+  <p class="mut">Tonnage = longueur en direction × largeur réelle × extension verticale × densité × facteur de continuité. Lois triangulaires (min / mode / max), 20 000 tirages. Teneurs de départ = teneurs pondérées écrêtées des enveloppes, réduites pour le biais de sélection.</p>
+  <div class="mc" id="mcin"></div>
+  <div class="ctrl"><label>Tirages<input type="number" id="nsim" value="20000" step="5000" min="2000"></label><button id="run">Relancer la simulation</button></div>
+  <div class="mc" id="mcout"></div>
+  <h3>Économie indicative de la cible (P50)</h3>
+  <div class="ctrl" id="ecoin"></div>
+  <div class="tw"><table id="eco"></table></div>
+</section>
+
+<section id="s9">
+  <h2>9. Screening fosse : teneur de coupure, ratio de découverture limite et intercepts</h2>
+  <div class="ctrl" id="pitin"></div>
+  <div class="kpis" id="pitk"></div>
+  <p class="mut">Pour chaque enveloppe : section 2D d'une fosse « isolée » partant de la surface (pire cas, sans fosse existante) — fond = largeur réelle, hauteur minéralisée H, pente globale α. SR section = (aire fosse − aire minerai) / aire minerai, comparé au SR limite à la teneur écrêtée diluée. Un intercept repris dans un pushback de la fosse FS aura un SR incrémental bien plus faible : ce test classe, il ne dimensionne pas.</p>
+  <div class="tw"><table id="pit"></table></div>
+</section>
+
+<section id="s10">
+  <h2>10. Interprétation géologique et implications pour la planification</h2>
+  <h3>Géométrie et continuité</h3>
+  <ul>
+    <li><b>Southern Arc</b> : DSDD715 (2 enveloppes de 28 et 20,8 m) et DSDD792 (3 enveloppes empilées de 154 à 230 m) montrent un système en lentilles parallèles séparées par 10–30 m de stérile — cohérent avec les « structures parallèles au SE » citées. Pour le modèle de blocs Datamine, je partirais sur des domaines par lentille (wireframes séparés) plutôt qu'une enveloppe unique, sinon la dilution interne sera surestimée.</li>
+    <li><b>DSR1149</b> : 40,8 m TW à 3,9 g/t entre 228 et 279 m le long du trou, dont seulement 37 % du métal dans les pics → minéralisation diffuse, la plus « estimable » du lot. C'est l'argument central de l'extension en profondeur ; reste à savoir si elle passe en fosse (voir §9) ou ouvre un scénario souterrain à long terme.</li>
+    <li><b>DSDD799</b> : 56,8 m TW à 1,8 g/t dès 26 m — le meilleur intercept pour l'économie de la fosse : métal en surface, probablement en partie oxydé/transitionnel (à vérifier sur le log), découverture quasi nulle.</li>
+    <li><b>Kassasoko</b> : intercepts de 5–27 m, plusieurs niveaux par trou (DSR1119, DSR1157). DSR1171 (1,9 g/t / 24 m à 160 m) et DSR1169 (4,8 g/t / 11,2 m) confirment la continuité en profondeur ; le lien avec Western Splay reste à démontrer par une section dédiée.</li>
+  </ul>
+  <h3>Teneurs et estimation</h3>
+  <ul>
+    <li>Population de pics &gt; 10 g/t à pas de 0,8 m TW répartis dans presque toutes les enveloppes : signature d'or libre en veinules + brèche. Le coefficient de variation par domaine sera élevé (&gt; 1,5 probable) → krigeage ordinaire avec top-cut par domaine, ou krigeage indicatrice / MIK si le CV dépasse 2.</li>
+    <li>Top-cut à fixer par courbe log-probabilité et analyse de perte de métal par domaine ; sur ces données, 20–25 g/t retire ~5–9 % du métal, ce qui paraît raisonnable.</li>
+    <li>Les teneurs résiduelles d'enveloppes (hors pics) tournent autour de <b>1,3–2,7 g/t</b> : c'est le « bruit de fond » minéralisé qui portera le tonnage — supérieur à la teneur moyenne de réserve (1,75 g/t), ce qui est bon signe pour la conversion.</li>
+  </ul>
+  <h3>Implications court/moyen terme</h3>
+  <ul>
+    <li><b>Contrôle des teneurs</b> : RC GC à maille serrée, échantillonnage 1 m (ou 2,5 m par gradin), duplicatas systématiques ; prévoir un écart modèle long terme / GC significatif sur les zones à pics.</li>
+    <li><b>Réconciliation</b> : suivre F1 (GC/modèle LT) séparément par domaine « diffus » vs « filonien » ; le risque est un F1 tonnage &gt; 1 et teneur &lt; 1 sur les zones écrêtées.</li>
+    <li><b>Séquençage</b> : prioriser les extensions superficielles (DSDD799, DSR1132, DSR1122-E1) dans les premières phases ; les extensions profondes (DSR1149, DSDD792) vont en pushback tardif, après revue d'optimisation Whittle/pseudoflow avec la nouvelle ressource.</li>
+    <li><b>Prix de l'or</b> : à 3 500 $/oz la coupure marginale tombe sous 0,4 g/t et le SR limite à 1,75 g/t dépasse 30:1 — la coque va s'approfondir mécaniquement. Je ferais tourner le plan à 2 500 et 3 000 $/oz pour tester la robustesse de la réserve.</li>
+  </ul>
+</section>
+
+<section id="s11">
+  <h2>11. Contrôle qualité du communiqué (points relevés)</h2>
+  <ul>
+    <li><b>Largeurs réelles</b> seules publiées, sans azimut/inclinaison ni table des collets (Annexe 1 non fournie ici) : longueur forée déduite par le ratio constant 0,8 — vérifié cohérent (ex. DSDD799 : 56,8/0,8 = 71 m → 26–97 m, pic à 85 m ✔ ; DSR1149 : 228–279 m, pic à 274 m ✔).</li>
+    <li><b>DSR1171</b> : « 24 mètres sur 160 mètres » → à lire « 24,0 m à partir de 160 m » (pic à 182 m cohérent avec 160–190 m).</li>
+    <li><b>DSR1132</b> : coquille « 13,9 g/t A u ».</li>
+    <li><b>DSR1122-E2</b> (8,8 g/t / 1,6 m) et <b>DSR1157-E3</b> (3,3 g/t / 3,2 m) : &gt; 85 % du métal dans un seul échantillon — à ne pas présenter comme des intercepts continus.</li>
+    <li>Paragraphe « À propos » : « mène actuellement une étude de faisabilité » alors que la FS a été publiée le 29/06/2026 — texte standard non mis à jour.</li>
+    <li>Forages RC jusqu'à ~280 m (DSR1149) : profondeur importante pour du RC, risque d'échantillons humides et de contamination ; le communiqué indique un basculement en DD quand l'eau dépasse la pression d'air — à vérifier trou par trou.</li>
+    <li>QA/QC décrit conforme aux pratiques (blancs, duplicatas, standards, ALS Kédougou → Ouagadougou, Au-AA 50 g, reprise gravimétrique &gt; 10 ppm) ; pas de statistiques de performance publiées.</li>
+  </ul>
+</section>
+
+<section id="s12">
+  <h2>12. Recommandations</h2>
+  <ol>
+    <li>Intégrer les 249 nouveaux trous au modèle de blocs avec <b>domaines par lentille</b> et top-cut par domaine ; contrôler la sensibilité de la teneur de ressource au top-cut 15/20/25 g/t.</li>
+    <li>Faire tourner une <b>optimisation de fosse</b> (Whittle/Datamine NPVS) avec la ressource mise à jour à 2 500 / 3 000 / 3 500 $/oz, et isoler le pushback qui capture DSR1149/DSDD792.</li>
+    <li>Programmer 2–3 <b>DD jumeaux</b> des RC à pics (DSR1128, DSR1132) pour valider les ~60 g/t et l'or grossier.</li>
+    <li>Prioriser le remplissage sur les <b>extensions superficielles</b> (DSDD799, DSR1132) : plus fort impact VAN par mètre foré.</li>
+    <li>Kassasoko : section dédiée vers Western Splay ; tester l'hypothèse de continuité avant de l'intégrer dans le plan.</li>
+    <li>Bambadji : densités, géotech et métallurgie dès les premiers DD de Kabewest pour accélérer la conversion présumée → indiquée.</li>
+  </ol>
+</section>
+</main>
+<footer>Analyse indépendante à partir d'informations publiques — non approuvée par une personne qualifiée. Les paramètres économiques sont des hypothèses de travail modifiables.</footer>
+
+<script>
+"use strict";
+// ---------- Données (communiqué 13/10/2026) ----------
+const RAW=`Southern Arc,DSDD699,DD,DSDD699-E1,E,,96,12.0,6.8
+Southern Arc,DSDD699,DD,DSDD699-I1,I,DSDD699-E1,98,2.4,18.9
+Southern Arc,DSDD699,DD,DSDD699-I2,I,DSDD699-E1,103,0.8,22.6
+Southern Arc,DSDD715,DD,DSDD715-E1,E,,92,28.0,2.4
+Southern Arc,DSDD715,DD,DSDD715-I1,I,DSDD715-E1,124,0.8,11.5
+Southern Arc,DSDD715,DD,DSDD715-E2,E,,155,20.8,2.8
+Southern Arc,DSDD715,DD,DSDD715-I2,I,DSDD715-E2,169,0.8,24.6
+Southern Arc,DSDD715,DD,DSDD715-I3,I,DSDD715-E2,180,0.8,12.1
+Southern Arc,DSDD792,DD,DSDD792-E1,E,,154,7.2,5.0
+Southern Arc,DSDD792,DD,DSDD792-I1,I,DSDD792-E1,162,0.8,24.8
+Southern Arc,DSDD792,DD,DSDD792-E2,E,,186,17.6,3.9
+Southern Arc,DSDD792,DD,DSDD792-I2,I,DSDD792-E2,187,0.8,25.2
+Southern Arc,DSDD792,DD,DSDD792-I3,I,DSDD792-E2,195,0.8,11.6
+Southern Arc,DSDD792,DD,DSDD792-I4,I,DSDD792-E2,198,0.8,21.1
+Southern Arc,DSDD792,DD,DSDD792-E3,E,,216,13.6,1.9
+Southern Arc,DSDD792,DD,DSDD792-I5,I,DSDD792-E3,227,0.8,11.8
+Southern Arc,DSDD799,DD,DSDD799-E1,E,,26,56.8,1.8
+Southern Arc,DSDD799,DD,DSDD799-I1,I,DSDD799-E1,85,0.8,24.5
+Southern Arc,DSR1149,RC,DSR1149-E1,E,,187,18.4,1.4
+Southern Arc,DSR1149,RC,DSR1149-E2,E,,228,40.8,3.9
+Southern Arc,DSR1149,RC,DSR1149-I1,I,DSR1149-E2,248,0.8,10.2
+Southern Arc,DSR1149,RC,DSR1149-I2,I,DSR1149-E2,261,1.6,17.3
+Southern Arc,DSR1149,RC,DSR1149-I3,I,DSR1149-E2,272,0.8,17.4
+Southern Arc,DSR1149,RC,DSR1149-I4,I,DSR1149-E2,274,0.8,11.3
+Southern Arc,DSR1128,RC,DSR1128-E1,E,,103,12.8,7.8
+Southern Arc,DSR1128,RC,DSR1128-I1,I,DSR1128-E1,112,0.8,59.5
+Southern Arc,DSR1128,RC,DSR1128-I2,I,DSR1128-E1,114,0.8,29.8
+Southern Arc,DSR1132,RC,DSR1132-E1,E,,65,20.0,4.5
+Southern Arc,DSR1132,RC,DSR1132-I1,I,DSR1132-E1,69,0.8,59.7
+Southern Arc,DSR1132,RC,DSR1132-I2,I,DSR1132-E1,76,0.8,13.9
+Kassasoko,DSR1119,RC,DSR1119-E1,E,,88,5.6,5.0
+Kassasoko,DSR1119,RC,DSR1119-I1,I,DSR1119-E1,88,0.8,19.1
+Kassasoko,DSR1119,RC,DSR1119-E2,E,,131,5.6,2.9
+Kassasoko,DSR1119,RC,DSR1119-E3,E,,146,5.6,8.1
+Kassasoko,DSR1119,RC,DSR1119-I2,I,DSR1119-E3,146,1.6,21.9
+Kassasoko,DSR1122,RC,DSR1122-E1,E,,49,11.2,3.5
+Kassasoko,DSR1122,RC,DSR1122-I1,I,DSR1122-E1,54,0.8,19.8
+Kassasoko,DSR1122,RC,DSR1122-E2,E,,137,1.6,8.8
+Kassasoko,DSR1122,RC,DSR1122-I2,I,DSR1122-E2,137,0.8,17.2
+Kassasoko,DSR1157,RC,DSR1157-E1,E,,75,9.6,2.8
+Kassasoko,DSR1157,RC,DSR1157-E2,E,,95,27.2,3.0
+Kassasoko,DSR1157,RC,DSR1157-I1,I,DSR1157-E2,110,0.8,13.5
+Kassasoko,DSR1157,RC,DSR1157-I2,I,DSR1157-E2,112,0.8,19.3
+Kassasoko,DSR1157,RC,DSR1157-I3,I,DSR1157-E2,116,0.8,28.3
+Kassasoko,DSR1157,RC,DSR1157-E3,E,,178,3.2,3.3
+Kassasoko,DSR1157,RC,DSR1157-I4,I,DSR1157-E3,181,0.8,11.3
+Kassasoko,DSR1169,RC,DSR1169-E1,E,,139,11.2,4.8
+Kassasoko,DSR1169,RC,DSR1169-I1,I,DSR1169-E1,141,0.8,22.3
+Kassasoko,DSR1171,RC,DSR1171-E1,E,,96,16.8,1.0
+Kassasoko,DSR1171,RC,DSR1171-E2,E,,160,24.0,1.9
+Kassasoko,DSR1171,RC,DSR1171-I1,I,DSR1171-E2,182,0.8,22.3`;
+const TWDH=0.8, OZ=31.1035;
+const D=RAW.trim().split("\n").map(l=>{const c=l.split(",");return{dep:c[0],hole:c[1],met:c[2],id:c[3],lvl:c[4],par:c[5],from:+c[6],tw:+c[7],au:+c[8]};});
+D.forEach(r=>{r.gm=r.au*r.tw;r.dh=r.tw/TWDH;r.to=r.from+r.dh;});
+const $=id=>document.getElementById(id);
+const f=(x,d=1)=>Number.isFinite(x)?x.toLocaleString("fr-FR",{minimumFractionDigits:d,maximumFractionDigits:d}):"–";
+const css=v=>getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+const depCol=d=>d==="Southern Arc"?css("--sa"):css("--ksk");
+const gradeCol=g=>g<1.5?css("--g1"):g<2.5?css("--g2"):g<4?css("--g3"):g<6?css("--g4"):css("--g5");
+
+function envelopes(cap,dip){
+  const s=Math.sin(dip*Math.PI/180);
+  return D.filter(r=>r.lvl==="E").map(e=>{
+    const inc=D.filter(r=>r.par===e.id);
+    const gmI=inc.reduce((a,r)=>a+r.gm,0), twI=inc.reduce((a,r)=>a+r.tw,0);
+    const gmC=inc.reduce((a,r)=>a+Math.min(r.au,cap)*r.tw,0);
+    const gCap=(e.gm-gmI+gmC)/e.tw;
+    return {...e,inc,nI:inc.length,gmI,shareM:gmI/e.gm*100,shareW:twI/e.tw*100,
+      gRes:(e.gm-gmI)/(e.tw-twI),gCap,gmCap:gCap*e.tw,loss:(1-gCap/e.au)*100,
+      zMid:(e.from+e.dh/2)*s,zTop:e.from*s,zBot:e.to*s};
+  });
+}
+const wavg=(a,k)=>a.reduce((s,r)=>s+r[k]*r.tw,0)/a.reduce((s,r)=>s+r.tw,0);
+
+// ---------- SVG helper ----------
+function svg(w,h,body){return `<svg viewBox="0 0 ${w} ${h}" role="img">${body}</svg>`;}
+function axis(x0,y0,x1,y1){return `<line x1="${x0}" y1="${y0}" x2="${x1}" y2="${y1}" stroke="${css("--line")}"/>`;}
+
+// ---------- 1. KPI ----------
+function renderKpi(E,cap){
+  const gm=E.reduce((a,r)=>a+r.gm,0);
+  $("k_gm").textContent=f(gm,0);
+  const best=[...E].sort((a,b)=>b.gm-a.gm)[0];
+  const k=[
+    [f(E.length,0),"enveloppes publiées (2 gisements)"],
+    [f(gm,0)+" g·m","métal total publié (TW)"],
+    [f(wavg(E,"au"),2)+" g/t","teneur pondérée brute"],
+    [f(wavg(E,"gCap"),2)+" g/t",`pondérée écrêtée ${cap} g/t`],
+    [f(E.reduce((a,r)=>a+r.gmI,0)/gm*100,0)+" %","métal dans les pics inclus"],
+    [best.hole,`meilleur g·m : ${f(best.gm,0)}`],
+    ["45 379 m","forés SA + Kassasoko (249 trous)"],
+    ["1,15 Moz","réserve probable FS @1,75 g/t"]];
+  $("kpis").innerHTML=k.map(x=>`<div class="kpi"><b>${x[0]}</b><span>${x[1]}</span></div>`).join("");
+}
+
+// ---------- 2. Table ----------
+let sortK="gm",sortD=-1;
+function renderTable(E,cap){
+  const dep=$("fdep").value, showI=$("finc").value==="1";
+  let rows=E.filter(r=>!dep||r.dep===dep).sort((a,b)=>sortD*((a[sortK]>b[sortK])?1:(a[sortK]<b[sortK])?-1:0));
+  const cols=[["dep","Gisement"],["hole","Forage"],["id","Intervalle"],["met","Méth."],["from","De (m)"],["to","À (m, DH)"],["tw","TW (m)"],["au","Au g/t"],["gm","g·m"],["nI","Pics"],["shareM","% métal pics"],["gRes","Résiduel g/t"],["gCap",`Écrêté ${cap}`],["loss","Perte %"],["zMid","Z vert. (m)"]];
+  let h="<thead><tr>"+cols.map(c=>`<th data-k="${c[0]}">${c[1]}${sortK===c[0]?(sortD<0?" ▼":" ▲"):""}</th>`).join("")+"</tr></thead><tbody>";
+  rows.forEach(r=>{
+    h+=`<tr><td><span class="tag ${r.dep==="Southern Arc"?"tSA":"tKSK"}">${r.dep==="Southern Arc"?"SA":"KSK"}</span></td><td>${r.hole}</td><td>${r.id}</td><td>${r.met}</td><td>${f(r.from,0)}</td><td>${f(r.to,0)}</td><td>${f(r.tw)}</td><td><b>${f(r.au)}</b></td><td>${f(r.gm,1)}</td><td>${r.nI}</td><td class="${r.shareM>60?"bad":r.shareM>40?"warn":"ok"}">${f(r.shareM,0)}</td><td>${f(r.gRes,2)}</td><td>${f(r.gCap,2)}</td><td>${f(r.loss,1)}</td><td>${f(r.zMid,0)}</td></tr>`;
+    if(showI) r.inc.forEach(i=>{h+=`<tr class="inc"><td></td><td></td><td>↳ ${i.id}</td><td></td><td>${f(i.from,0)}</td><td>${f(i.to,0)}</td><td>${f(i.tw)}</td><td>${f(i.au)}</td><td>${f(i.gm,1)}</td><td colspan="6"></td></tr>`;});
+  });
+  $("tbl").innerHTML=h+"</tbody>";
+  $("tbl").querySelectorAll("th").forEach(th=>th.onclick=()=>{const k=th.dataset.k;if(sortK===k)sortD*=-1;else{sortK=k;sortD=-1;}update();});
+}
+
+// ---------- 3. Scatter & bars ----------
+function renderScatter(E){
+  const W=520,H=340,L=46,R=12,T=12,B=36,xmax=60,ymin=0.8,ymax=12;
+  const X=v=>L+v/xmax*(W-L-R), Y=v=>T+(1-Math.log(v/ymin)/Math.log(ymax/ymin))*(H-T-B);
+  let b=axis(L,H-B,W-R,H-B)+axis(L,T,L,H-B);
+  [0,10,20,30,40,50,60].forEach(v=>b+=`<text x="${X(v)}" y="${H-B+14}" text-anchor="middle">${v}</text>`);
+  [1,2,4,8].forEach(v=>b+=`<line x1="${L}" x2="${W-R}" y1="${Y(v)}" y2="${Y(v)}" stroke="${css("--line")}" stroke-dasharray="2 3"/><text x="${L-6}" y="${Y(v)+4}" text-anchor="end">${v}</text>`);
+  [25,50,100,150].forEach(g=>{let p="";for(let x=2;x<=xmax;x+=0.5){const y=g/x;if(y<ymin||y>ymax)continue;p+=(p?"L":"M")+X(x).toFixed(1)+","+Y(y).toFixed(1);}
+    b+=`<path d="${p}" fill="none" stroke="${css("--gold")}" stroke-opacity=".45"/>`;const lx=g<75?g/1.15:46;b+=`<text x="${X(lx)+3}" y="${Y(g/lx)-4}" style="fill:${css("--gold")}">${g} g·m</text>`;});
+  b+=`<text x="${(L+W-R)/2}" y="${H-4}" text-anchor="middle">Largeur réelle (m)</text><text transform="translate(12 ${(T+H-B)/2}) rotate(-90)" text-anchor="middle">Au g/t (log)</text>`;
+  E.forEach(r=>{const rad=3+Math.sqrt(r.gm)*0.9;b+=`<circle cx="${X(r.tw)}" cy="${Y(r.au)}" r="${rad}" fill="${depCol(r.dep)}" fill-opacity=".55" stroke="${depCol(r.dep)}"><title>${r.id} : ${f(r.au)} g/t × ${f(r.tw)} m = ${f(r.gm,0)} g·m</title></circle>`;
+    if(r.gm>60){const lt=r.tw>45;b+=`<text x="${lt?X(r.tw)-rad-2:X(r.tw)+rad+2}" y="${Y(r.au)+4}" text-anchor="${lt?"end":"start"}" style="fill:${css("--ink")}">${r.hole}</text>`;}});
+  $("scatter").innerHTML=svg(W,H,b);
+}
+function renderBars(E){
+  const rows=[...E].sort((a,b)=>b.gm-a.gm),W=520,rh=15,L=96,R=40,T=6,H=T+rows.length*rh+20,max=170;
+  const X=v=>L+v/max*(W-L-R);let b="";
+  rows.forEach((r,i)=>{const y=T+i*rh;b+=`<text x="${L-6}" y="${y+11}" text-anchor="end" style="fill:${depCol(r.dep)}">${r.id}</text><rect x="${L}" y="${y+2}" width="${X(r.gm)-L}" height="${rh-4}" fill="${css("--line")}"/><rect x="${L}" y="${y+2}" width="${X(r.gmCap)-L}" height="${rh-4}" fill="${css("--gold")}"><title>${f(r.gmCap,0)} g·m écrêtés / ${f(r.gm,0)} bruts</title></rect><text x="${X(r.gm)+4}" y="${y+11}">${f(r.gm,0)}</text>`;});
+  [0,50,100,150].forEach(v=>b+=`<text x="${X(v)}" y="${H-4}" text-anchor="middle">${v}</text>`);
+  $("bars").innerHTML=svg(W,H,b);
+}
+
+// ---------- 4. Strip logs ----------
+function renderStrip(E,dip){
+  const holes=[...new Set(E.map(r=>r.hole))];
+  const W=Math.max(760,holes.length*64+60),H=380,L=44,T=26,B=14,dmax=300,cw=(W-L-10)/holes.length;
+  const Y=v=>T+v/dmax*(H-T-B);let b="";
+  for(let d=0;d<=dmax;d+=50)b+=`<line x1="${L}" x2="${W-6}" y1="${Y(d)}" y2="${Y(d)}" stroke="${css("--line")}" stroke-dasharray="2 4"/><text x="${L-6}" y="${Y(d)+4}" text-anchor="end">${d}</text>`;
+  const pitDH=120/Math.sin(dip*Math.PI/180);
+  b+=`<line x1="${L}" x2="${W-6}" y1="${Y(pitDH)}" y2="${Y(pitDH)}" stroke="${css("--bad")}" stroke-dasharray="6 4"/><text x="${W-8}" y="${Y(pitDH)-4}" text-anchor="end" style="fill:${css("--bad")}">fond de fosse indicatif 120 m vertical (${f(pitDH,0)} m DH)</text>`;
+  holes.forEach((h,i)=>{const x=L+i*cw+cw/2,es=E.filter(r=>r.hole===h),dep=es[0].dep,last=Math.max(...es.map(r=>r.to))+10;
+    b+=`<text x="${x}" y="${T-12}" text-anchor="middle" style="fill:${depCol(dep)};font-weight:600">${h}</text><line x1="${x}" x2="${x}" y1="${Y(0)}" y2="${Y(Math.min(last,dmax))}" stroke="${css("--mut")}" stroke-width="1.2"/>`;
+    es.forEach(e=>{b+=`<rect x="${x-11}" y="${Y(e.from)}" width="22" height="${Y(e.to)-Y(e.from)}" fill="${gradeCol(e.au)}" stroke="${css("--ink")}" stroke-opacity=".25"><title>${e.id} ${f(e.au)} g/t / ${f(e.tw)} m TW (${f(e.from,0)}–${f(e.to,0)} m)</title></rect><text x="${x+14}" y="${Y((e.from+e.to)/2)+4}" style="font-size:10px;fill:${css("--ink")}">${f(e.au)}</text>`;
+      e.inc.forEach(i=>{b+=`<rect x="${x-15}" y="${Y(i.from)}" width="30" height="${Math.max(2,Y(i.to)-Y(i.from))}" fill="${css("--hi")}"><title>${i.id} ${f(i.au)} g/t / ${f(i.tw)} m</title></rect>`;});});});
+  b+=`<text transform="translate(12 ${(T+H)/2}) rotate(-90)" text-anchor="middle">Profondeur le long du trou (m)</text>`;
+  $("strip").innerHTML=`<div class="tw">${svg(W,H,b).replace("<svg ",`<svg style="min-width:${W}px" `)}</div>`;
+}
+
+// ---------- 5. Top-cut ----------
+function renderCap(dip,cap){
+  const caps=[];for(let c=5;c<=60;c+=1)caps.push(c);
+  const series=["Southern Arc","Kassasoko",null].map(dep=>caps.map(c=>{const E=envelopes(c,dip).filter(r=>!dep||r.dep===dep);return wavg(E,"gCap");}));
+  const W=520,H=300,L=40,R=12,T=12,B=34,ymin=2,ymax=3.6,X=v=>L+(v-5)/55*(W-L-R),Y=v=>T+(1-(v-ymin)/(ymax-ymin))*(H-T-B);
+  let b=axis(L,H-B,W-R,H-B)+axis(L,T,L,H-B);
+  [10,20,30,40,50,60].forEach(v=>b+=`<text x="${X(v)}" y="${H-B+14}" text-anchor="middle">${v}</text>`);
+  for(let v=2;v<=3.6;v+=0.4)b+=`<line x1="${L}" x2="${W-R}" y1="${Y(v)}" y2="${Y(v)}" stroke="${css("--line")}" stroke-dasharray="2 3"/><text x="${L-5}" y="${Y(v)+4}" text-anchor="end">${f(v)}</text>`;
+  const cols=[css("--sa"),css("--ksk"),css("--ink")];
+  series.forEach((s,k)=>{b+=`<path d="${s.map((v,i)=>(i?"L":"M")+X(caps[i]).toFixed(1)+","+Y(v).toFixed(1)).join("")}" fill="none" stroke="${cols[k]}" stroke-width="${k==2?2.4:1.6}"/>`;});
+  b+=`<line x1="${X(cap)}" x2="${X(cap)}" y1="${T}" y2="${H-B}" stroke="${css("--gold")}" stroke-dasharray="4 3"/><text x="${X(cap)+4}" y="${T+10}" style="fill:${css("--gold")}">top-cut retenu ${cap} g/t</text>`;
+  b+=`<text x="${(L+W)/2}" y="${H-4}" text-anchor="middle">Top-cut (g/t)</text>`;
+  b+=`<text x="${W-R}" y="${H-B-34}" text-anchor="end" style="fill:${cols[0]}">Southern Arc</text><text x="${W-R}" y="${H-B-20}" text-anchor="end" style="fill:${cols[1]}">Kassasoko</text><text x="${W-R}" y="${H-B-6}" text-anchor="end" style="fill:${cols[2]}">Ensemble</text>`;
+  $("capcurve").innerHTML=svg(W,H,b);
+}
+function renderShare(E){
+  const rows=[...E].filter(r=>r.nI>0).sort((a,b)=>b.shareM-a.shareM),W=520,rh=15,L=96,R=40,T=4,H=T+rows.length*rh+18,X=v=>L+v/100*(W-L-R);let b="";
+  rows.forEach((r,i)=>{const y=T+i*rh;b+=`<text x="${L-6}" y="${y+11}" text-anchor="end" style="fill:${depCol(r.dep)}">${r.id}</text><rect x="${L}" y="${y+2}" width="${X(r.shareM)-L}" height="${rh-4}" fill="${r.shareM>60?css("--bad"):r.shareM>40?css("--warn"):css("--ok")}" fill-opacity=".8"/><rect x="${L}" y="${y+5}" width="${X(r.shareW)-L}" height="${rh-10}" fill="${css("--ink")}"/><text x="${X(r.shareM)+4}" y="${y+11}">${f(r.shareM,0)} %</text>`;});
+  [0,25,50,75,100].forEach(v=>b+=`<text x="${X(v)}" y="${H-3}" text-anchor="middle">${v}%</text>`);
+  $("share").innerHTML=svg(W,H,b)+`<div class="legend"><span><i style="background:var(--warn)"></i>% du métal dans les pics</span><span><i style="background:var(--ink)"></i>% de la largeur occupée par les pics</span></div>`;
+}
+
+// ---------- 6. Comparatif ----------
+function renderCmp(E){
+  const g=["Southern Arc","Kassasoko"].map(d=>{const a=E.filter(r=>r.dep===d),gm=a.reduce((s,r)=>s+r.gm,0),tw=a.reduce((s,r)=>s+r.tw,0);
+    return [d,a.length,f(tw,1),f(tw/a.length,1),f(gm,0),f(gm/tw,2),f(wavg(a,"gCap"),2),f(wavg(a,"gRes"),2),f(a.reduce((s,r)=>s+r.gmI,0)/gm*100,0),f(a.reduce((s,r)=>s+r.zMid,0)/a.length,0),f(Math.max(...a.map(r=>r.zBot)),0)];});
+  const hd=["Gisement","N env.","TW cumul (m)","TW moy. (m)","g·m","Teneur pond.","Écrêtée","Résiduelle","% métal pics","Z moyen (m)","Z max (m)"];
+  $("cmp").innerHTML="<thead><tr>"+hd.map(h=>`<th>${h}</th>`).join("")+"</tr></thead><tbody>"+g.map(r=>"<tr>"+r.map(c=>`<td>${c}</td>`).join("")+"</tr>").join("")+"</tbody>";
+}
+
+// ---------- 8. Monte-Carlo ----------
+const MCP={
+  "Southern Arc":{strike:[200,400,700],tw:[8,15,25],vert:[60,100,150],grade:[1.4,1.9,2.6],dens:[2.6,2.7,2.8],cont:[0.5,0.65,0.8]},
+  "Kassasoko":{strike:[150,300,500],tw:[4,8,14],vert:[50,80,120],grade:[1.6,2.3,3.2],dens:[2.6,2.7,2.8],cont:[0.4,0.55,0.7]}};
+const LBL={strike:"Extension en direction (m)",tw:"Largeur réelle (m)",vert:"Extension verticale (m)",grade:"Teneur (g/t)",dens:"Densité (t/m³)",cont:"Facteur de continuité"};
+function buildMcInputs(){
+  $("mcin").innerHTML=Object.entries(MCP).map(([d,p])=>`<div class="mcbox"><h3 style="margin-top:0;color:${depCol(d)}">${d} — hypothèses (min / mode / max)</h3><table><tbody>`+
+    Object.keys(LBL).map(k=>`<tr><td>${LBL[k]}</td>`+[0,1,2].map(j=>`<td><input type="number" step="any" data-d="${d}" data-k="${k}" data-j="${j}" value="${p[k][j]}"></td>`).join("")+"</tr>").join("")+"</tbody></table></div>").join("");
+  $("mcin").querySelectorAll("input").forEach(i=>i.onchange=()=>{MCP[i.dataset.d][i.dataset.k][+i.dataset.j]=+i.value;runMC();});
+}
+function rng(seed){return()=>{seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+function tri(u,[a,c,b]){if(b<=a)return a;const F=(c-a)/(b-a);return u<F?a+Math.sqrt(u*(b-a)*(c-a)):b-Math.sqrt((1-u)*(b-a)*(b-c));}
+const pct=(s,p)=>s[Math.min(s.length-1,Math.floor(p*s.length))];
+let MCRES={};
+function runMC(){
+  const n=Math.max(1000,+$("nsim").value||20000),r=rng(20261013);let tot=[];MCRES={};
+  const out=Object.entries(MCP).map(([d,p])=>{const t=[],o=[];
+    for(let i=0;i<n;i++){const T=tri(r(),p.strike)*tri(r(),p.tw)*tri(r(),p.vert)*tri(r(),p.dens)*tri(r(),p.cont),g=tri(r(),p.grade);t.push(T);o.push(T*g/OZ);tot[i]=(tot[i]||0)+T*g/OZ;}
+    const ts=[...t].sort((a,b)=>a-b),os=[...o].sort((a,b)=>a-b);MCRES[d]={t:ts,o:os};return [d,ts,os];});
+  const totS=tot.sort((a,b)=>a-b);MCRES.total=totS;
+  $("mcout").innerHTML=out.map(([d,ts,os])=>{const P=[0.9,0.5,0.1].map(q=>[pct(ts,1-q),pct(os,1-q)]);
+    return `<div class="mcbox"><h3 style="margin-top:0;color:${depCol(d)}">${d} — résultat</h3><table><thead><tr><th>Percentile</th><th>Mt</th><th>g/t</th><th>koz</th></tr></thead><tbody>`+
+      ["P90 (prudent)","P50","P10 (optimiste)"].map((l,i)=>`<tr><td>${l}</td><td>${f(P[i][0]/1e6,2)}</td><td>${f(P[i][1]*OZ/P[i][0],2)}</td><td><b>${f(P[i][1]/1e3,0)}</b></td></tr>`).join("")+`</tbody></table>${hist(os,depCol(d))}</div>`;}).join("")+
+    `<div class="mcbox"><h3 style="margin-top:0">Total SA + Kassasoko</h3><table><tbody><tr><td>P90</td><td><b>${f(pct(totS,0.1)/1e3,0)} koz</b></td></tr><tr><td>P50</td><td><b>${f(pct(totS,0.5)/1e3,0)} koz</b></td></tr><tr><td>P10</td><td><b>${f(pct(totS,0.9)/1e3,0)} koz</b></td></tr><tr><td>P50 en % de la réserve FS</td><td><b>${f(pct(totS,0.5)/1.15e6*100,0)} %</b></td></tr></tbody></table>${hist(totS,css("--gold"))}<p class="mut" style="margin:4px 0 0">g/t affiché = rapport oz/t du percentile (indicatif). Somme des P50 ≠ P50 de la somme.</p></div>`;
+  renderEco();
+}
+function hist(s,col){const nb=30,mn=s[0],mx=pct(s,0.995),w=(mx-mn)/nb||1,c=new Array(nb).fill(0);s.forEach(v=>{const k=Math.min(nb-1,Math.floor((v-mn)/w));if(v<=mx)c[k]++;});
+  const W=320,H=110,L=4,B=16,cm=Math.max(...c);let b="";c.forEach((v,i)=>b+=`<rect x="${L+i*(W-8)/nb}" y="${H-B-v/cm*(H-B-6)}" width="${(W-8)/nb-1}" height="${v/cm*(H-B-6)}" fill="${col}" fill-opacity=".7"/>`);
+  [0.1,0.5,0.9].forEach(q=>{const x=L+(pct(s,q)-mn)/(mx-mn)*(W-8);b+=`<line x1="${x}" x2="${x}" y1="4" y2="${H-B}" stroke="${css("--ink")}" stroke-dasharray="3 2"/>`;});
+  b+=`<text x="${L}" y="${H-3}">${f(mn/1e3,0)} koz</text><text x="${W-4}" y="${H-3}" text-anchor="end">${f(mx/1e3,0)} koz</text>`;return svg(W,H,b);}
+
+// ---------- Économie ----------
+const ECO={price:3500,roy:6,ref:5,rec:92,aisc:1450,cm:3.8,cp:20,cga:6,dil:10,slope:45,H:40,dcost:200};
+const ELBL={price:"Prix or ($/oz)",roy:"Redevance (%)",ref:"Affinage ($/oz)",rec:"Récupération (%)",aisc:"AISC ($/oz)",cm:"Coût mine ($/t déplacée)",cp:"Coût traitement ($/t)",cga:"G&A ($/t minerai)",dil:"Dilution (%)",slope:"Pente globale fosse (°)",H:"Hauteur minéralisée H (m)",dcost:"Coût forage SA+KSK ($/m)"};
+function ecoInputs(id,keys){$(id).innerHTML=keys.map(k=>`<label>${ELBL[k]}<input type="number" step="any" data-e="${k}" value="${ECO[k]}"></label>`).join("");
+  $(id).querySelectorAll("input").forEach(i=>i.onchange=()=>{ECO[i.dataset.e]=+i.value;syncEco(i);renderEco();renderPit();});}
+function syncEco(src){document.querySelectorAll(`input[data-e="${src.dataset.e}"]`).forEach(i=>{if(i!==src)i.value=src.value;});}
+const netOz=()=>(ECO.price*(1-ECO.roy/100)-ECO.ref);
+const valT=g=>g/OZ*ECO.rec/100*netOz();
+function renderEco(){
+  if(!MCRES.total)return;
+  const o50=pct(MCRES.total,0.5),o90=pct(MCRES.total,0.1),rec=ECO.rec/100,marg=ECO.price-ECO.aisc,m=45379,cost=m*ECO.dcost;
+  const rows=[["Onces in situ (P90 / P50)",`${f(o90/1e3,0)} / ${f(o50/1e3,0)} koz`],
+    ["Onces récupérables P50",`${f(o50*rec/1e3,0)} koz`],
+    ["Marge unitaire (prix − AISC)",`${f(marg,0)} $/oz`],
+    ["Marge non actualisée P50",`${f(o50*rec*marg/1e6,0)} M$`],
+    ["Valeur actualisée indicative P50 (5 %, production décalée de 6 ans, sur 4 ans)",`${f(o50*rec*marg/4*[6,7,8,9].reduce((s,y)=>s+1/Math.pow(1.05,y),0)/1e6,0)} M$`],
+    ["Coût de forage SA+KSK (45 379 m)",`${f(cost/1e6,1)} M$`],
+    ["Coût de découverte P50",`${f(cost/o50,1)} $/oz`],
+    ["Coût de découverte P90",`${f(cost/o90,1)} $/oz`]];
+  $("eco").innerHTML="<tbody>"+rows.map(r=>`<tr><td style="text-align:left">${r[0]}</td><td><b>${r[1]}</b></td></tr>`).join("")+"</tbody>";
+}
+
+// ---------- 9. Screening fosse ----------
+function renderPit(){
+  const cap=+$("cap").value,dip=+$("dip").value,E=envelopes(cap,dip),cMarg=ECO.cp+ECO.cga,dil=ECO.dil/100,ta=Math.tan(ECO.slope*Math.PI/180);
+  const coM=cMarg/(ECO.rec/100*netOz()/OZ),coB=(cMarg+ECO.cm)/(ECO.rec/100*netOz()/OZ);
+  const srBE=g=>(valT(g)-cMarg-ECO.cm)/ECO.cm;
+  $("pitk").innerHTML=[[f(coM,2)+" g/t","coupure marginale (sans minage)"],[f(coB,2)+" g/t","coupure break-even (avec minage)"],[f(srBE(1.75),1)+" : 1","SR limite à 1,75 g/t (teneur réserve)"],[f(valT(1.75),0)+" $/t","valeur nette récupérable à 1,75 g/t"]]
+    .map(x=>`<div class="kpi"><b>${x[0]}</b><span>${x[1]}</span></div>`).join("");
+  const rows=E.map(e=>{const g=e.gCap*(1-dil),H=Math.max(ECO.H,1),Zb=e.zMid+H/2,Wd=e.tw,A=Wd*Zb+Zb*Zb/ta,Ao=Wd*H*(1+dil),sr=(A-Ao)/Ao,be=srBE(g),r=sr/be;
+    return {...e,g,sr,be,r,st:r<0.6?["Fosse","ok"]:r<1?["Marginal","warn"]:["Hors fosse isolée","bad"]};}).sort((a,b)=>a.r-b.r);
+  const hd=["Gis.","Intervalle","Z milieu (m)","TW (m)","Écrêtée diluée g/t","SR section","SR limite","Ratio","Statut"];
+  $("pit").innerHTML="<thead><tr>"+hd.map(h=>`<th>${h}</th>`).join("")+"</tr></thead><tbody>"+rows.map(r=>`<tr><td><span class="tag ${r.dep==="Southern Arc"?"tSA":"tKSK"}">${r.dep==="Southern Arc"?"SA":"KSK"}</span></td><td>${r.id}</td><td>${f(r.zMid,0)}</td><td>${f(r.tw)}</td><td>${f(r.g,2)}</td><td>${f(r.sr,1)}</td><td>${f(r.be,1)}</td><td>${f(r.r,2)}</td><td><span class="pill ${r.st[1]}">${r.st[0]}</span></td></tr>`).join("")+"</tbody>";
+}
+
+// ---------- Export ----------
+function exportCSV(){const cap=+$("cap").value,E=envelopes(cap,+$("dip").value);
+  const h="gisement;forage;intervalle;methode;de_m;a_m_dh;tw_m;au_gt;gm;n_pics;pct_metal_pics;teneur_residuelle;teneur_ecretee_"+cap+";perte_pct;z_vert_m\n";
+  const b=E.map(r=>[r.dep,r.hole,r.id,r.met,r.from,f(r.to,1),r.tw,r.au,f(r.gm,2),r.nI,f(r.shareM,1),f(r.gRes,2),f(r.gCap,2),f(r.loss,1),f(r.zMid,0)].join(";")).join("\n");
+  const a=document.createElement("a");a.href=URL.createObjectURL(new Blob(["﻿"+h+b],{type:"text/csv"}));a.download="diamba_sud_enveloppes.csv";a.click();}
+
+// ---------- Orchestration ----------
+function update(){const cap=+$("cap").value||20,dip=+$("dip").value||60,E=envelopes(cap,dip);
+  renderKpi(E,cap);renderTable(E,cap);renderScatter(E);renderBars(E);renderStrip(E,dip);renderCap(dip,cap);renderShare(E);renderCmp(E);renderPit();}
+["cap","dip","fdep","finc"].forEach(id=>$(id).onchange=update);
+$("csv").onclick=exportCSV;$("run").onclick=runMC;
+ecoInputs("ecoin",["price","rec","aisc","dcost"]);
+ecoInputs("pitin",["price","roy","ref","rec","cm","cp","cga","dil","slope","H"]);
+buildMcInputs();update();runMC();
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",()=>{update();runMC();});
+</script>
+</body>
+</html>
