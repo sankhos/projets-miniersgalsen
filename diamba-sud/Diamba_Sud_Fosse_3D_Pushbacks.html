@@ -63,12 +63,12 @@ a{color:var(--acc)}
       <label>Top-cut (g/t)<input type="number" id="cap" value="20" step="1"></label>
     </fieldset>
     <fieldset><legend>Estimation IDW anisotrope</legend>
-      <label>Portée direction (m)<input type="number" id="rs" value="80" step="10"></label>
-      <label>Portée pendage (m)<input type="number" id="ru" value="70" step="10"></label>
-      <label>Portée normale (m)<input type="number" id="rn" value="10" step="5"></label>
+      <label>Portée direction (m)<input type="number" id="rs" value="50" step="10"></label>
+      <label>Portée pendage (m)<input type="number" id="ru" value="45" step="10"></label>
+      <label>Portée normale (m)<input type="number" id="rn" value="12" step="5"></label>
     </fieldset>
     <fieldset><legend>Économie</legend>
-      <label>Prix or ($/oz)<input type="number" id="price" value="3000" step="100"></label>
+      <label>Prix or ($/oz)<input type="number" id="price" value="3300" step="100"></label>
       <label>Récupération (%)<input type="number" id="rec" value="92" step="1"></label>
       <label>Redevance (%)<input type="number" id="roy" value="6" step="0.5"></label>
       <label>Coût mine ($/t)<input type="number" id="cm" value="3.0" step="0.1"></label>
@@ -126,6 +126,7 @@ a{color:var(--acc)}
 
 <div class="card">
   <h2>Hypothèses et limites</h2>
+  <div class="note"><b>Calage 2026.</b> Paramètres par défaut (portées 50 / 45 / 12 m, 3 300 $/oz = prix des coques de ressource Fortuna 2026) choisis pour que Southern Arc reproduise l'ordre de grandeur de la ressource indiquée publiée au 16/01/2026 : modèle ≈ 6,25 Mt à 2,02 g/t (405 koz) vs Fortuna 6,0 Mt à 1,91 g/t (367 koz). Pentes Fortuna : 33° altéré / 46° frais (ici ~40–45° uniforme).</div>
   <div class="note"><b>Modèle conceptuel, ni ressource ni réserve.</b> Les coordonnées des collets, azimuts et inclinaisons (Annexe 1) ne sont pas publiés. Les forages sont placés le long de la direction à l'espacement saisi, inclinés à -60° vers -Y. Chaque collet est positionné pour que l'intercept principal tombe sur un plan minéralisé de pendage donné vers +Y : les autres intercepts du même trou forment des lentilles parallèles.</div>
   <ul>
     <li><b>Blocs</b> 15 × 15 × 15 m. Composites de 3 m le long du trou : pics inclus écrêtés, teneur résiduelle de l'enveloppe ailleurs, 0,02 g/t hors enveloppe. Estimation par inverse des distances au carré dans un ellipsoïde aligné sur le corps, avec au moins 3 composites.</li>
